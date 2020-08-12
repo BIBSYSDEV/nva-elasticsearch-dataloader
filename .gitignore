@@ -298,3 +298,6 @@ gradle-app.setting
 # End of https://www.gitignore.io/api/java,linux,macos,gradle,windows,eclipse,intellij+all,visualstudiocode
 /packaged.yaml
 /sampackaged_raw.yaml
+
+# Ignore Gradle build output directory
+build
