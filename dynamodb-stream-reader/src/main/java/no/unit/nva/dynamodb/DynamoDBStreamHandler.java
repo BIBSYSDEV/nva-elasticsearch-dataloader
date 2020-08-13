@@ -22,6 +22,7 @@ public class DynamoDBStreamHandler implements RequestHandler<Map<String,Object>,
 
     @Override
     public Map<String,Object> handleRequest(Map<String,Object> event, Context context) {
+        System.out.println("event: "+ event);
         logger.debug("event: {}",event);
         return event;
     }
