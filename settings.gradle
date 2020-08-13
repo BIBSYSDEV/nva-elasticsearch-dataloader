@@ -8,4 +8,4 @@
  */
 
 rootProject.name = 'nva-elasticsearch-dataloader'
-include 'dynamo-stream-reader'
+include 'dynamodb-stream-reader'

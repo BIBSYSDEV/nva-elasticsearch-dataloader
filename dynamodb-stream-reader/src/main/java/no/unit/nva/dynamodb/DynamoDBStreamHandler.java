@@ -2,26 +2,27 @@ package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import nva.commons.utils.JacocoGenerated;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent event, Context context> {
+import java.util.Map;
 
+public class DynamoDBStreamHandler implements RequestHandler<Map<String,Object>, Map<String,Object>> {
 
-    private static final Logger logger = LoggerFactory.getLogger(PostAuthenticationHandler.class);
+        private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
     /**
      * Default constructor for DynamoDBStreamHandler.
      */
     @JacocoGenerated
     public DynamoDBStreamHandler() {
-        this(
-            new CustomerApiClient(HttpClient.newHttpClient(), new ObjectMapper(), new Environment()),
-            AWSCognitoIdentityProviderClient.builder().build()
-        );
 
     }
 
     @Override
-    public Map<String,Object> handleRequest(DynamodbEvent event, Context context) {
+    public Map<String,Object> handleRequest(Map<String,Object> event, Context context) {
+        logger.debug("event: {}",event);
         return event;
     }
 
