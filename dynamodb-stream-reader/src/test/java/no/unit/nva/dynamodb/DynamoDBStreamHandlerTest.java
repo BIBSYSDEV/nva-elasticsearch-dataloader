@@ -4,13 +4,12 @@ import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SuppressWarnings("unchecked")
 public class DynamoDBStreamHandlerTest {
 
+    private static final String SAMPLE_EVENT_FILENAME = "SampleDynamoDBStreamEvent.json";
     private DynamoDBStreamHandler handler;
 
     /**
@@ -24,18 +23,7 @@ public class DynamoDBStreamHandlerTest {
     @Test
     public void handleRequestReturnsEventOnInput() {
 
-        Map<String, Object> requestEvent = Map.of(
-                "eventID", "1",
-                "eventVersion", "1.0",
-                "dynamodb", Map.of(
-                        "Keys", Map.of(
-                                "ID", Map.of(
-                                        "N", "1"
-                                )
-                        )
-                )
-        );
-        DynamodbEvent requestEvent2 = new DynamodbEvent();
+        DynamodbEvent requestEvent2 = ResourceUtils.loadEventFromResourceFile(SAMPLE_EVENT_FILENAME);
         String response = "sadakdsa";
         assertNotNull(response);
 

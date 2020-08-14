@@ -24,8 +24,9 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
+        ObjectMapper objectMapper = new ObjectMapper();
         try {
-            System.out.println("DynamodbEvent: " + new ObjectMapper().writeValueAsString(event));
+            System.out.println("DynamodbEvent: " + objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             logger.debug("exception",e);
@@ -33,6 +34,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         NvaResourceExtractor nvaResourceExtractor = new NvaResourceExtractor();
         for (DynamodbEvent.DynamodbStreamRecord rec: event.getRecords()) {
             try {
+                System.out.println("rec:" + objectMapper.writeValueAsString(rec));
                 Publication publication = nvaResourceExtractor.extractPublication(rec);
                 System.out.println(publication);
             } catch (JsonProcessingException e) {
