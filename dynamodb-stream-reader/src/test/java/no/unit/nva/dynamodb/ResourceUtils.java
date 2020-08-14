@@ -20,7 +20,7 @@ public class ResourceUtils {
         ObjectMapper mapper = new ObjectMapper();
         DynamodbEvent event = null;
         try {
-            event = mapper.readValue(is, DynamodbEvent.class );
+            event = mapper.readValue(is, DynamodbEvent.class);
         } catch (IOException e) {
             e.printStackTrace();
         }

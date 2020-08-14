@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SuppressWarnings("unchecked")
 public class DynamoDBStreamHandlerTest {
 
-    private static final String SAMPLE_EVENT_FILENAME = "SampleDynamoDBStreamEvent.json";
+    private static final String SAMPLE_EVENT_FILENAME = "DynamoDBStreamModifyEvent.json";
     private DynamoDBStreamHandler handler;
 
     /**
