@@ -50,6 +50,8 @@ allprojects {
         implementation group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: awsSdkVersion
         implementation group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: awsSdkVersion
         implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.9'
+        implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: '0.3.8'
+        implementation group: 'com.github.BIBSYSDEV', name: 'nva-datamodel-java', version: '0.10.2'
 
         testImplementation group: 'org.hamcrest', name: 'hamcrest', version: '2.2'
         testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.2.4'
