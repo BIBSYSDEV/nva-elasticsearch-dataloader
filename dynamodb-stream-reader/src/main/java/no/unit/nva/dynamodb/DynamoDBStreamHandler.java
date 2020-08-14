@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
-        private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
     /**
      * Default constructor for DynamoDBStreamHandler.
@@ -25,20 +25,21 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
         try {
-            System.out.println("DynamodbEvent: "+ new ObjectMapper().writeValueAsString(event));
+            System.out.println("DynamodbEvent: " + new ObjectMapper().writeValueAsString(event));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
+            logger.debug("exception",e);
         }
+        NvaResourceExtractor nvaResourceExtractor = new NvaResourceExtractor();
         for (DynamodbEvent.DynamodbStreamRecord rec: event.getRecords()) {
             try {
-                Publication publication = new NvaResourceExtractor().extractPublication(rec);
+                Publication publication = nvaResourceExtractor.extractPublication(rec);
+                System.out.println(publication);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
+                logger.debug("exception",e);
             }
         }
         return "Handled " + event.getRecords().size() + " records";
     }
-
-
-
 }
