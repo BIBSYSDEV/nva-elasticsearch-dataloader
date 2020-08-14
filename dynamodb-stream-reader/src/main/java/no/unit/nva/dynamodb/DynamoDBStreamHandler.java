@@ -3,12 +3,15 @@ package no.unit.nva.dynamodb;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
+import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.StreamRecord;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nva.commons.utils.JacocoGenerated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
@@ -40,8 +43,10 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
         StreamRecord record = streamRecord.getDynamodb();
+        Map<String, AttributeValue> recordNewImage = record.getNewImage();
         try {
             System.out.println("Upserting search index with " + objectMapper.writeValueAsString(record));
+            System.out.println("Values: "+recordNewImage);
             logger.debug("Upserting search index with {}", objectMapper.writeValueAsString(record));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
