@@ -1,10 +1,12 @@
 package no.unit.nva.dynamodb;
 
+import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 @SuppressWarnings("unchecked")
 public class DynamoDBStreamHandlerTest {
@@ -23,8 +25,8 @@ public class DynamoDBStreamHandlerTest {
     @Test
     public void handleRequestReturnsEventOnInput() {
 
-        DynamodbEvent requestEvent2 = ResourceUtils.loadEventFromResourceFile(SAMPLE_EVENT_FILENAME);
-        String response = "sadakdsa";
+        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_EVENT_FILENAME);
+        String response =  handler.handleRequest(requestEvent, mock(Context.class));
         assertNotNull(response);
 
 
