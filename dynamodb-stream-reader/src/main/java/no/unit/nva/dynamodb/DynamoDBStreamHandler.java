@@ -21,6 +21,34 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
     private final ObjectMapper objectMapper = JsonUtils.objectMapper;
 
+
+    private final Function<DynamodbEvent.DynamodbStreamRecord, String> getIdentifier =
+            (DynamodbEvent.DynamodbStreamRecord streamRecord) -> {
+        Map<String, AttributeValue> keys = streamRecord.getDynamodb().getKeys();
+        AttributeValue identifierattribute = keys.get("identifier");
+        String identifier = identifierattribute.getS();
+        logger.debug("extracted identifier: {}", identifier);
+        return identifier;
+    };
+
+    private final Function<String, Publication> getPublication = (String identifier) -> {
+        Publication publication = new Publication();
+        logger.debug("retrieved publication: {}", publication);
+        return publication;
+    };
+
+    private final Function<Publication, Publication> flattenPublication = (Publication publication)  -> {
+        Publication flattenedPublication = publication;
+        logger.debug("flattened publication: {}", publication);
+        return flattenedPublication;
+    };
+
+    private final Consumer<Publication> updateSearchIndex = (Publication publication) -> {
+        // use search API to upload flattened publication into ElasticSearch
+        logger.debug("Updated search API with publication: {}", publication);
+    };
+
+
     /**
      * Default constructor for DynamoDBStreamHandler.
      */
@@ -28,6 +56,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public DynamoDBStreamHandler() {
 
     }
+
+
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
@@ -65,29 +95,5 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         logger.debug("Deleting from search API publication with identifier: {}", identifier);
     }
 
-    Function<DynamodbEvent.DynamodbStreamRecord, String> getIdentifier = (DynamodbEvent.DynamodbStreamRecord streamRecord) -> {
-        Map<String, AttributeValue> keys = streamRecord.getDynamodb().getKeys();
-        AttributeValue identifierattribute = keys.get("identifier");
-        String identifier = identifierattribute.getS();
-        logger.debug("extracted identifier: {}", identifier);
-        return identifier;
-    };
-
-    Function<String, Publication> getPublication = (String identifier) -> {
-        Publication publication = new Publication();
-        logger.debug("retrieved publication: {}", publication);
-        return publication;
-    };
-
-    Function<Publication, Publication> flattenPublication = (Publication publication)  -> {
-        Publication flattenedPublication = publication;
-        logger.debug("flattened publication: {}", publication);
-        return flattenedPublication;
-    };
-
-    Consumer<Publication> updateSearchIndex = (Publication publication) -> {
-        // use search API to upload flattened publication into ElasticSearch
-        logger.debug("Updated search API with publication: {}", publication);
-    };
 
 }
