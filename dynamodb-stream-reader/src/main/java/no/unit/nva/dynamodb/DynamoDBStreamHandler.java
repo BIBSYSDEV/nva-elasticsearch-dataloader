@@ -4,15 +4,17 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
-import com.amazonaws.services.lambda.runtime.events.models.dynamodb.StreamRecord;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import no.unit.nva.model.Publication;
 import nva.commons.utils.JacocoGenerated;
 import nva.commons.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
@@ -50,36 +52,42 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
 
-        Map<String, AttributeValue> keys = streamRecord.getDynamodb().getKeys();
-        AttributeValue identifierattribute = keys.get("identifier");
-        String identifier = identifierattribute.getS();
+        String identifier  = getIdentifier.apply(streamRecord);
+        Publication publication = getPublication.apply(identifier);
+        Publication flattenedPublication = flattenPublication.apply(publication);
+        updateSearchIndex.accept(flattenedPublication);
+        logger.debug("Upserting search index for identifier  " + identifier);
 
-        System.out.println("Upserting search index for identifier  " + identifier);
-
-//        String record = streamRecord.toString();
-//
-////        Map<String, AttributeValue> valueMap = record.getNewImage();
-//        Item item = ItemUtils.toItem(record);
-//        try {
-//
-//
-//            System.out.println("Upserting search index with " + objectMapper.writeValueAsString(record));
-//            System.out.println("Values: "+recordNewImage);
-//            logger.debug("Upserting search index with {}", objectMapper.writeValueAsString(record));
-//            Publication publication = objectMapper.readValue(objectMapper.writeValueAsString(record), Publication.class);
-//            System.out.println("publication:" + publication);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//        }
     }
 
     private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
-        StreamRecord record = streamRecord.getDynamodb();
-        try {
-            System.out.println("deleteing from search index  " + objectMapper.writeValueAsString(record));
-            logger.debug("Deleteing from search index {}", objectMapper.writeValueAsString(record));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        String identifier  = getIdentifier.apply(streamRecord);
+        logger.debug("Deleting from search API publication with identifier: {}", identifier);
     }
+
+    Function<DynamodbEvent.DynamodbStreamRecord, String> getIdentifier = (DynamodbEvent.DynamodbStreamRecord streamRecord) -> {
+        Map<String, AttributeValue> keys = streamRecord.getDynamodb().getKeys();
+        AttributeValue identifierattribute = keys.get("identifier");
+        String identifier = identifierattribute.getS();
+        logger.debug("extracted identifier: {}", identifier);
+        return identifier;
+    };
+
+    Function<String, Publication> getPublication = (String identifier) -> {
+        Publication publication = new Publication();
+        logger.debug("retrieved publication: {}", publication);
+        return publication;
+    };
+
+    Function<Publication, Publication> flattenPublication = (Publication publication)  -> {
+        Publication flattenedPublication = publication;
+        logger.debug("flattened publication: {}", publication);
+        return flattenedPublication;
+    };
+
+    Consumer<Publication> updateSearchIndex = (Publication publication) -> {
+        // use search API to upload flattened publication into ElasticSearch
+        logger.debug("Updated search API with publication: {}", publication);
+    };
+
 }
