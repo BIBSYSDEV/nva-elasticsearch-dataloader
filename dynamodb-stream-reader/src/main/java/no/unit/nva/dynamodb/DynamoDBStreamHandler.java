@@ -30,8 +30,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
         try {
-            System.out.println("\t sout event: " + objectMapper.writeValueAsString(event).replace("\n","\r"));
-            logger.info("logged event: " + objectMapper.writeValueAsString(event));
+            logger.debug("logged event: " + objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
