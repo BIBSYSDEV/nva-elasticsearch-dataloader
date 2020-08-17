@@ -2,6 +2,7 @@ package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nva.commons.utils.JsonUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +18,7 @@ public class ResourceUtils {
     public static DynamodbEvent loadEventFromResourceFile(String filename) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         InputStream is = classloader.getResourceAsStream(filename);
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = JsonUtils.objectMapper;
         DynamodbEvent event = null;
         try {
             event = mapper.readValue(is, DynamodbEvent.class);

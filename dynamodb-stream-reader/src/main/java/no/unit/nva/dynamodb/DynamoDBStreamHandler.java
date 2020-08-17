@@ -7,7 +7,6 @@ import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeVal
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.StreamRecord;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import no.unit.nva.model.Publication;
 import nva.commons.utils.JacocoGenerated;
 import nva.commons.utils.JsonUtils;
 import org.slf4j.Logger;
@@ -50,17 +49,28 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     }
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
-        StreamRecord record = streamRecord.getDynamodb();
-        Map<String, AttributeValue> recordNewImage = record.getNewImage();
-        try {
-            System.out.println("Upserting search index with " + objectMapper.writeValueAsString(record));
-            System.out.println("Values: "+recordNewImage);
-            logger.debug("Upserting search index with {}", objectMapper.writeValueAsString(record));
-            Publication publication = objectMapper.readValue(recordNewImage.toString(), Publication.class);
-            System.out.println("publication:" + publication);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+
+        Map<String, AttributeValue> keys = streamRecord.getDynamodb().getKeys();
+        AttributeValue identifierattribute = keys.get("identifier");
+        String identifier = identifierattribute.getS();
+
+        System.out.println("Upserting search index for identifier  " + identifier);
+
+//        String record = streamRecord.toString();
+//
+////        Map<String, AttributeValue> valueMap = record.getNewImage();
+//        Item item = ItemUtils.toItem(record);
+//        try {
+//
+//
+//            System.out.println("Upserting search index with " + objectMapper.writeValueAsString(record));
+//            System.out.println("Values: "+recordNewImage);
+//            logger.debug("Upserting search index with {}", objectMapper.writeValueAsString(record));
+//            Publication publication = objectMapper.readValue(objectMapper.writeValueAsString(record), Publication.class);
+//            System.out.println("publication:" + publication);
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
