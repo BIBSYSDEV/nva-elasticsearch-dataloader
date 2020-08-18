@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import elasticsearch.ElasticSearchRestClient;
 import no.unit.nva.model.Publication;
 import nva.commons.utils.JacocoGenerated;
 import nva.commons.utils.JsonUtils;
@@ -19,43 +20,16 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
     private final ObjectMapper objectMapper = JsonUtils.objectMapper;
-
+    private final ElasticSearchRestClient elasticSearchClient = new ElasticSearchRestClient();
 
     private final Function<DynamodbEvent.DynamodbStreamRecord, String> getIdentifier =
             (DynamodbEvent.DynamodbStreamRecord streamRecord) -> {
                 Map<String, AttributeValue> keys = streamRecord.getDynamodb().getKeys();
-                AttributeValue identifierattribute = keys.get("identifier");
-                String identifier = identifierattribute.getS();
-                logger.debug("extracted identifier: {}", identifier);
+                AttributeValue identifierAttribute = keys.get("identifier");
+                String identifier = identifierAttribute.getS();
+                logger.trace("extracted identifier: {}", identifier);
                 return identifier;
             };
-
-    private final Function<DynamodbEvent.DynamodbStreamRecord, Map<String, AttributeValue>> getPublicationImageFromStream =
-            (DynamodbEvent.DynamodbStreamRecord streamRecord) -> {
-                Map<String, AttributeValue> newImage = streamRecord.getDynamodb().getNewImage();
-                return newImage;
-
-            };
-
-    private final Function<String, Publication> getPublication = (String identifier) -> {
-        Publication publication = new Publication();
-        logger.debug("retrieved publication: {}", publication);
-        return publication;
-    };
-
-    private final Function<Map<String, AttributeValue>, PublicationIndexDocument> flattenImageToIndexRecord = (Map<String, AttributeValue> publicationImage) -> {
-        PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(publicationImage.get("identifier").getS());
-        logger.debug("flattened publication: {}", flattenedPublication);
-        publicationImage.forEach((k, v) -> {
-            if (v.getM() == null) {
-                flattenedPublication.putIndexValue(k, v.getS());
-            } else {
-
-            }
-        });
-        return flattenedPublication;
-    };
-
 
     private void flatten(PublicationIndexDocument target, String prefix, Map<String, AttributeValue> valueMap) {
         logger.debug("flatten: {}", valueMap);
@@ -74,17 +48,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         } else {
             return k;
         }
-    }
-
-    ;
-
-
-
-    private final Consumer<Publication> updateSearchIndex = (Publication publication) -> {
-        // use search API to upload flattened publication into ElasticSearch
-        logger.debug("Updated search API with publication: {}", publication);
     };
-
 
     /**
      * Default constructor for DynamoDBStreamHandler.
@@ -97,12 +61,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
-//        try {
-//            logger.debug("logged event: " + objectMapper.writeValueAsString(event));
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//        }
-
         for (DynamodbEvent.DynamodbStreamRecord streamRecord : event.getRecords()) {
             switch (streamRecord.getEventName()) {
                 case "INSERT":
@@ -120,21 +78,18 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     }
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
-
-        String identifier = getIdentifier.apply(streamRecord);
-//        Publication publication = getPublication.apply(identifier);
-
-        Map<String, AttributeValue> valueMap = getPublicationImageFromStream.apply(streamRecord);
+        String identifier = streamRecord.getDynamodb().getKeys().get("identifier").getS();
+        Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
         PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(identifier);
         flatten(flattenedPublication, "", valueMap);
-//        FlattenedPublicationIndexRecord flattenedPublication = flattenImageToIndexRecord.apply(valueMap);
-//        updateSearchIndex.accept(flattenedPublication);
-            logger.debug("Upserting search index for identifier {} with values {}",identifier, flattenedPublication);
+        logger.trace("Upserting search index for identifier {} with values {}",identifier, flattenedPublication);
+        elasticSearchClient.addDocumentToIndex(flattenedPublication);
     }
 
     private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
         String identifier = getIdentifier.apply(streamRecord);
-        logger.debug("Deleting from search API publication with identifier: {}", identifier);
+        logger.trace("Deleting from search API publication with identifier: {}", identifier);
+        elasticSearchClient.removeDocumentFromIndex(identifier);
     }
 
 

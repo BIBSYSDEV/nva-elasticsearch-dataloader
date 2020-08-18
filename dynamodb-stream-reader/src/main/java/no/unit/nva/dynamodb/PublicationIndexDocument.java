@@ -18,9 +18,6 @@ public class PublicationIndexDocument {
     }
 
     public String putIndexValue(String index, String value) {
-        if (indexValues.containsKey(index)) {
-            logger.warn("Index {} already exists with value {}, new values {}", index, indexValues.get(index)  ,value);
-        }
         return indexValues.put(index, value);
     }
 
