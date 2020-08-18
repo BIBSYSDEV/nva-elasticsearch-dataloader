@@ -6,14 +6,14 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FlattenedPublicationIndexRecord {
+public class PublicationIndexDocument {
 
     private final String identifier;
     private final Map<String, String> indexValues = new HashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
 
-    public FlattenedPublicationIndexRecord(String identifier) {
+    public PublicationIndexDocument(String identifier) {
         this.identifier = identifier;
     }
 

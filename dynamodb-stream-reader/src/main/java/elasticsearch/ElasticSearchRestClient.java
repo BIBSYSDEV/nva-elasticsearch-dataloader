@@ -1,6 +1,6 @@
 package elasticsearch;
 
-import no.unit.nva.dynamodb.FlattenedPublicationIndexRecord;
+import no.unit.nva.dynamodb.PublicationIndexDocument;
 
 public class ElasticSearchRestClient {
 
@@ -9,7 +9,7 @@ public class ElasticSearchRestClient {
     }
 
 
-    public void addDocumentToIndex(FlattenedPublicationIndexRecord document) {
+    public void addDocumentToIndex(PublicationIndexDocument document) {
 
     }
 

@@ -43,8 +43,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         return publication;
     };
 
-    private final Function<Map<String, AttributeValue>, FlattenedPublicationIndexRecord> flattenImageToIndexRecord = (Map<String, AttributeValue> publicationImage) -> {
-        FlattenedPublicationIndexRecord flattenedPublication = new FlattenedPublicationIndexRecord(publicationImage.get("identifier").getS());
+    private final Function<Map<String, AttributeValue>, PublicationIndexDocument> flattenImageToIndexRecord = (Map<String, AttributeValue> publicationImage) -> {
+        PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(publicationImage.get("identifier").getS());
         logger.debug("flattened publication: {}", flattenedPublication);
         publicationImage.forEach((k, v) -> {
             if (v.getM() == null) {
@@ -57,7 +57,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     };
 
 
-    private void flatten(FlattenedPublicationIndexRecord target, String prefix, Map<String, AttributeValue> valueMap) {
+    private void flatten(PublicationIndexDocument target, String prefix, Map<String, AttributeValue> valueMap) {
         logger.debug("flatten: {}", valueMap);
         valueMap.forEach((k, v) -> {
             if (v.getM() == null) {
@@ -125,7 +125,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 //        Publication publication = getPublication.apply(identifier);
 
         Map<String, AttributeValue> valueMap = getPublicationImageFromStream.apply(streamRecord);
-        FlattenedPublicationIndexRecord flattenedPublication = new FlattenedPublicationIndexRecord(identifier);
+        PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(identifier);
         flatten(flattenedPublication, "", valueMap);
 //        FlattenedPublicationIndexRecord flattenedPublication = flattenImageToIndexRecord.apply(valueMap);
 //        updateSearchIndex.accept(flattenedPublication);
