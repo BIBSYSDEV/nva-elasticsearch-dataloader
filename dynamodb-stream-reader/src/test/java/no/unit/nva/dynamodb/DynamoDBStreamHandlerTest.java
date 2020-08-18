@@ -11,7 +11,8 @@ import static org.mockito.Mockito.mock;
 @SuppressWarnings("unchecked")
 public class DynamoDBStreamHandlerTest {
 
-    private static final String SAMPLE_EVENT_FILENAME = "DynamoDBStreamModifyEvent.json";
+    private static final String SAMPLE_MODIFY_EVENT_FILENAME = "DynamoDBStreamModifyEvent.json";
+    private static final String SAMPLE_INSERT_EVENT_FILENAME = "DynamoDBStreamInsertEvent.json";
     private DynamoDBStreamHandler handler;
 
     /**
@@ -25,7 +26,7 @@ public class DynamoDBStreamHandlerTest {
     @Test
     public void handleRequestReturnsEventOnInput() {
 
-        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_EVENT_FILENAME);
+        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_INSERT_EVENT_FILENAME);
         String response =  handler.handleRequest(requestEvent, mock(Context.class));
         assertNotNull(response);
 
