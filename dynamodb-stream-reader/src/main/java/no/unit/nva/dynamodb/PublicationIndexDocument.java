@@ -19,8 +19,8 @@ public class PublicationIndexDocument {
 
     @Override
     public String toString() {
-        return "FlattenedPublicationIndexRecord{" +
-                "identifier='" + identifier + '\'' +
-                ", indexValues=" + indexValues + '}';
+        return "FlattenedPublicationIndexRecord{"
+                + "identifier='" + identifier + '\''
+                + ", indexValues=" + indexValues + '}';
     }
 }

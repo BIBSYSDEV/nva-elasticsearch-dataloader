@@ -47,8 +47,10 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
         String identifier = streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
-        PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(identifier);
-        flatten(flattenedPublication, "", valueMap);
+        ValueMapFlattener flattener = new ValueMapFlattener.Builder()
+                .withSeparator(".")
+                .build();
+        PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(valueMap);
         logger.trace("Upserting search index for identifier {} with values {}",identifier, flattenedPublication);
         elasticSearchClient.addDocumentToIndex(flattenedPublication);
     }
@@ -59,23 +61,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         elasticSearchClient.removeDocumentFromIndex(identifier);
     }
 
-    private void flatten(PublicationIndexDocument target, String prefix, Map<String, AttributeValue> valueMap) {
-        logger.debug("flatten: {}", valueMap);
-        valueMap.forEach((k, v) -> {
-            if (v.getM() == null) {
-                target.putIndexValue(addIndexPrefix(prefix,k), v.getS());
-            } else {
-                flatten(target,k, v.getM());
-            }
-        });
-    }
 
-    private String addIndexPrefix(String prefix, String k) {
-        if (prefix != null && !prefix.isEmpty()) {
-            return prefix + "." + k;
-        } else {
-            return k;
-        }
-    };
+
 
 }
