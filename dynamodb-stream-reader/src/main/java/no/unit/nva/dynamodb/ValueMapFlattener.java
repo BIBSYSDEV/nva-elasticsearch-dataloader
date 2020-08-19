@@ -15,7 +15,7 @@ public class ValueMapFlattener {
     public static class Builder {
 
         private ValueMapFlattener valueMapFlattener;
-        private String separator;
+        private String separator = "";
 
         public Builder withSeparator(String separator){
             this.separator = separator;
@@ -39,7 +39,7 @@ public class ValueMapFlattener {
     }
 
     private void flatten(PublicationIndexDocument target, String prefix, Map<String, AttributeValue> valueMap) {
-        logger.debug("flatten: {}", valueMap);
+        logger.trace("flatten: {}", valueMap);
         valueMap.forEach((k, v) -> {
             if (v.getM() == null) {
                 target.putIndexValue(addIndexPrefix(prefix,k), v.getS());
