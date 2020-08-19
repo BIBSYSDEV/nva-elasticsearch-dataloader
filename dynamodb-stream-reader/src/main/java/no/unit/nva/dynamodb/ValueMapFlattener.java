@@ -9,7 +9,6 @@ import java.util.Map;
 public class ValueMapFlattener {
 
     private static final Logger logger = LoggerFactory.getLogger(ValueMapFlattener.class);
-    private static final String IDENTIFIER = "identifier";
 
     private final String separator;
 
@@ -33,8 +32,8 @@ public class ValueMapFlattener {
         this.separator = separator;
     }
 
-    public PublicationIndexDocument flattenValueMap(Map<String, AttributeValue> valueMap) {
-        PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(valueMap.get(IDENTIFIER).getS());
+    public PublicationIndexDocument flattenValueMap(String identifier, Map<String, AttributeValue> valueMap) {
+        PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(identifier);
         flatten(flattenedPublication, "", valueMap);
         return  flattenedPublication;
     }

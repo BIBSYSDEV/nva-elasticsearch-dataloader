@@ -50,7 +50,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         ValueMapFlattener flattener = new ValueMapFlattener.Builder()
                 .withSeparator(".")
                 .build();
-        PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(valueMap);
+        PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
         logger.trace("Upserting search index for identifier {} with values {}",identifier, flattenedPublication);
         elasticSearchClient.addDocumentToIndex(flattenedPublication);
     }
