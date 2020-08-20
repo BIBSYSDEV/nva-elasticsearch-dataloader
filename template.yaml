@@ -73,6 +73,15 @@ Resources:
       Role: !GetAtt TriggerExecutionRole.Arn
       MemorySize: 1408
 
+  TriggerLambdaMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      Enabled: true
+      EventSourceArn: !ImportValue NvaResourcesTableStreamArn
+      FunctionName: !Ref ReadDynamoDBStreamsTrigger
+      StartingPosition: LATEST
+
+
 Outputs:
   ReadDynamoDBStreamsTrigger:
     Description: ARN Identifier of the ReadDynamoDBStreamsTrigger
