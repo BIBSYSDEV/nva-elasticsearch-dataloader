@@ -21,4 +21,13 @@ public class IndexFilterBuilderTest {
         assertTrue(predicate.test(INDEX));
     }
 
+    @Test
+    @DisplayName("Testing building of Indexfiler wuth allowAll")
+    public void testIndexFilterAllowAll() {
+        Predicate<String> predicate = new IndexFilterBuilder().doAllowAll().build();
+        assertNotNull(predicate);
+        assertTrue(predicate.test(INDEX));
+    }
+
+
 }

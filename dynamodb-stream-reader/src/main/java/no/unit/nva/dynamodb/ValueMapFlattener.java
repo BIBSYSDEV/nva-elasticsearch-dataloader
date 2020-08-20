@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 public class ValueMapFlattener {
 
@@ -19,6 +20,7 @@ public class ValueMapFlattener {
         private ValueMapFlattener valueMapFlattener;
         private String separator = "";
         private Predicate<String> indexFilter = new IndexFilterBuilder().doAllowAll().build();
+        private UnaryOperator<String> indexMapping;
 
         public Builder withSeparator(String separator){
             this.separator = separator;
@@ -27,6 +29,11 @@ public class ValueMapFlattener {
 
         public Builder withIndexFilter(Predicate<String> filter){
             this.indexFilter = filter;
+            return this;  //By returning the builder each time, we can create a fluent interface.
+        }
+
+        public Builder withIndexMapping(UnaryOperator<String> mapping){
+            this.indexMapping = mapping;
             return this;  //By returning the builder each time, we can create a fluent interface.
         }
 
