@@ -11,7 +11,7 @@ public class IndexMapperBuilder {
 
     public IndexMapperBuilder withIndex(String fromIndex, String toIndex) {
         this.indexMapping.put(fromIndex, toIndex);
-        return this;  //By returning the builder each time, we can create a fluent interface.
+        return this;
     }
 
     public IndexMapperBuilder doPassthru() {
@@ -24,16 +24,7 @@ public class IndexMapperBuilder {
         if (!passthru) {
             return index -> indexMapping.get(index);
         } else {
-            return new UnaryOperator<String>() {
-                @Override
-                public String apply(String s) {
-                    if (indexMapping.containsKey(s)) {
-                        return indexMapping.get(s);
-                    } else {
-                        return s;
-                    }
-                }
-            };
+            return index -> indexMapping.getOrDefault(index, index);
         }
     }
 }

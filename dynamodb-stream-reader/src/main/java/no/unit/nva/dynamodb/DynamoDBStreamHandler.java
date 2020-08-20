@@ -53,6 +53,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
+        logger.debug("event={}", event);
         for (DynamodbEvent.DynamodbStreamRecord streamRecord : event.getRecords()) {
             switch (streamRecord.getEventName()) {
                 case "INSERT":
@@ -72,13 +73,14 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
         String identifier = streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
+        logger.debug("valueMap={}", valueMap.toString());
         ValueMapFlattener flattener = new ValueMapFlattener.Builder()
                 .withIndexFilter(indexfilter)
                 .withIndexMapping(indexMapping)
                 .withSeparator(".")
                 .build();
         PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
-        logger.trace("Upserting search index for identifier {} with values {}",identifier, flattenedPublication);
+        logger.debug("Upserting search index for identifier {} with values {}",identifier, flattenedPublication);
         elasticSearchClient.addDocumentToIndex(flattenedPublication);
     }
 
