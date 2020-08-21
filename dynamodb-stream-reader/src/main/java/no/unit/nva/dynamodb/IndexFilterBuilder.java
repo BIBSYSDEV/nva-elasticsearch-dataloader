@@ -9,6 +9,11 @@ public class IndexFilterBuilder {
     private boolean allowAll;
     private Set<String> wantedIndexes;
 
+    /**
+     * Adds index to set of wanted indexes.
+     * @param index to be added
+     * @return builder to use
+     */
     public IndexFilterBuilder withIndex(String index) {
         if (this.wantedIndexes == null) {
             this.wantedIndexes = new HashSet<>();
@@ -17,11 +22,19 @@ public class IndexFilterBuilder {
         return this;  //By returning the builder each time, we can create a fluent interface.
     }
 
+    /**
+     * Make this filer allow all indexnames.
+     * @return builder to make filter with
+     */
     public IndexFilterBuilder doAllowAll() {
         this.allowAll = true;
         return this;
     }
 
+    /**
+     * Build the filer.
+     * @return predicate to be used
+     */
     public Predicate<String> build() {
         if (allowAll) {
             return new Predicate<String>() {

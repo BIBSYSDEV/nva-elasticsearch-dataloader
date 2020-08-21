@@ -18,48 +18,28 @@ import java.util.function.UnaryOperator;
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
     public static final String IDENTIFIER = "identifier";
-
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
-    public static final String DATE_YEAR = "date.year";
+    public static final String DATE_YEAR = "entityDescription.date.year";
     public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
-    public static final String CONTRIBUTORS_IDENTIITY_NAME = "entityDescription.contributors.identiity.name";
-    public static final String PUBLICATION_TYPE = "type";
+    public static final String CONTRIBUTORS_IDENTIITY_NAME = "entityDescription.contributors.identity.name";
+    public static final String PUBLICATION_TYPE = "publicationInstance.type";
     public static final String YEAR = "year";
     public static final String TITLE = "title";
     public static final String NAME = "name";
     public static final String TYPE = "type";
     private final ElasticSearchRestClient elasticSearchClient = new ElasticSearchRestClient();
-    private final UnaryOperator<String> indexMapping;
-    private final Predicate<String> indexfilter;
+    private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
     /**
      * Default constructor for DynamoDBStreamHandler.
      */
     @JacocoGenerated
     public DynamoDBStreamHandler() {
-        indexMapping = new IndexMapperBuilder()
-                .withIndex(DATE_YEAR, YEAR)
-                .withIndex(DESCRIPTION_MAIN_TITLE, TITLE)
-                .withIndex(CONTRIBUTORS_IDENTIITY_NAME, NAME)
-                .withIndex(PUBLICATION_TYPE, TYPE)
-                .build();
 
-        indexfilter = new IndexFilterBuilder()
-                .withIndex(DATE_YEAR)
-                .withIndex(DESCRIPTION_MAIN_TITLE)
-                .withIndex(CONTRIBUTORS_IDENTIITY_NAME)
-                .withIndex(PUBLICATION_TYPE)
-                .build();
 
     }
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
-        try {
-            logger.debug("event={}", JsonUtils.objectMapper.writeValueAsString(event));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
         for (DynamodbEvent.DynamodbStreamRecord streamRecord : event.getRecords()) {
             switch (streamRecord.getEventName()) {
                 case "INSERT":
@@ -79,14 +59,35 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
         String identifier = streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
-        logger.debug("valueMap={}", valueMap.toString());
+        logger.trace("valueMap={}", valueMap.toString());
+
+        Predicate<String> indexfilter = new IndexFilterBuilder()
+                .withIndex(DATE_YEAR)
+                .withIndex(DESCRIPTION_MAIN_TITLE)
+                .withIndex(CONTRIBUTORS_IDENTIITY_NAME)
+                .withIndex(PUBLICATION_TYPE)
+                .build();
+
+        UnaryOperator<String> indexMapping = new IndexMapperBuilder()
+                .withIndex(DATE_YEAR, YEAR)
+                .withIndex(DESCRIPTION_MAIN_TITLE, TITLE)
+                .withIndex(CONTRIBUTORS_IDENTIITY_NAME, NAME)
+                .withIndex(PUBLICATION_TYPE, TYPE)
+                .build();
+
         ValueMapFlattener flattener = new ValueMapFlattener.Builder()
                 .withIndexFilter(indexfilter)
                 .withIndexMapping(indexMapping)
                 .withSeparator(".")
                 .build();
+
         PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
-        logger.debug("Upserting search index for identifier {} with values {}",identifier, flattenedPublication);
+        try {
+            logger.debug("Upserting search index for identifier {} with values {}",
+                    identifier,  JsonUtils.objectMapper.writeValueAsString(flattenedPublication));
+        } catch (JsonProcessingException e) {
+            logger.debug("error logging:",e);
+        }
         elasticSearchClient.addDocumentToIndex(flattenedPublication);
     }
 

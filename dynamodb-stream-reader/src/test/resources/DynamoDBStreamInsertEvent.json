@@ -1,795 +1,376 @@
 {
   "records": [
     {
-      "eventID": "fef2924292c28beb7bdad826e2f6af4b",
+      "eventID": "83d4d2eef4ce6492d512957603fa793c",
       "eventName": "INSERT",
       "eventVersion": "1.1",
       "eventSource": "aws:dynamodb",
       "awsRegion": "eu-west-1",
       "dynamodb": {
-        "approximateCreationDateTime": 1597402198000,
+        "approximateCreationDateTime": "2020-08-21T07:25:15.000+0000",
         "keys": {
           "identifier": {
-            "s": "654321",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "0123456789"
           },
           "modifiedDate": {
-            "s": "2020-08-14T10:30:10.019991Z",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "2020-08-18T12:40:18.887110Z"
           }
         },
-        "newImage":  {
+        "newImage": {
           "owner": {
-            "s": "sg@unit.no",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "tehe@unit.no"
           },
           "identifier": {
-            "s": "654321",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "0123456789"
           },
           "entityDescription": {
-            "s": null,
-            "n": null,
-            "b": null,
             "m": {
               "date": {
-                "s": null,
-                "n": null,
-                "b": null,
                 "m": {
+                  "year": {
+                    "s": "2020"
+                  },
                   "type": {
-                    "s": "PublicationDate",
-                    "n": null,
-                    "b": null,
-                    "m": null,
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    "s": "PublicationDate"
                   }
-                },
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                }
               },
               "reference": {
-                "s": null,
-                "n": null,
-                "b": null,
                 "m": {
                   "publicationInstance": {
-                    "s": null,
-                    "n": null,
-                    "b": null,
                     "m": {
                       "volume": {
-                        "s": "100",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "257"
                       },
                       "pages": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
                         "m": {
+                          "end": {
+                            "s": "2070025"
+                          },
                           "type": {
-                            "s": "Range",
-                            "n": null,
-                            "b": null,
-                            "m": null,
-                            "l": null,
-                            "null": null,
-                            "bool": null,
-                            "ss": null,
-                            "ns": null,
-                            "bs": null
+                            "s": "Range"
+                          },
+                          "begin": {
+                            "s": "2070025"
                           }
-                        },
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        }
                       },
                       "issue": {
-                        "s": "8",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "6"
                       },
                       "peerReviewed": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": false,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "bool": true
                       },
                       "type": {
-                        "s": "JournalArticle",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "JournalArticle"
                       }
-                    },
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    }
                   },
                   "type": {
-                    "s": "Reference",
-                    "n": null,
-                    "b": null,
-                    "m": null,
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    "s": "Reference"
                   },
                   "publicationContext": {
-                    "s": null,
-                    "n": null,
-                    "b": null,
                     "m": {
+                      "level": {
+                        "s": "LEVEL_1"
+                      },
                       "openAccess": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": false,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "bool": false
                       },
                       "peerReviewed": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": false,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "bool": false
                       },
                       "onlineIssn": {
-                        "s": "2470-0029",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "0370-1972"
                       },
                       "title": {
-                        "s": "Physical Review D",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "Physica status solidi. B, Basic research"
                       },
                       "type": {
-                        "s": "Journal",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "Journal"
                       }
-                    },
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    }
                   },
                   "doi": {
-                    "s": "https://doi.org/10.1103/physrevd.100.085005",
-                    "n": null,
-                    "b": null,
-                    "m": null,
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    "s": "https://doi.org/10.1002/pssb.202070025"
                   }
-                },
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                }
               },
               "metadataSource": {
-                "s": "https://www.crossref.org/",
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "s": "https://www.crossref.org/"
               },
               "mainTitle": {
-                "s": "Conformality loss and quantum criticality in topological Higgs electrodynamics in 2+1 dimensions",
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "s": "Dynamic Impurity Redistributions in Kesterite Absorbers"
               },
               "language": {
-                "s": "http://lexvo.org/id/iso639-3/eng",
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "s": "http://lexvo.org/id/iso639-3/eng"
               },
               "contributors": {
-                "s": null,
-                "n": null,
-                "b": null,
-                "m": null,
                 "l": [
                   {
-                    "s": null,
-                    "n": null,
-                    "b": null,
                     "m": {
                       "sequence": {
-                        "s": null,
-                        "n": "1",
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "n": "1"
                       },
                       "identity": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
                         "m": {
                           "name": {
-                            "s": "Nogueira, Flavio S.",
-                            "n": null,
-                            "b": null,
-                            "m": null,
-                            "l": null,
-                            "null": null,
-                            "bool": null,
-                            "ss": null,
-                            "ns": null,
-                            "bs": null
+                            "s": "Grini, Sigbjørn"
                           },
                           "type": {
-                            "s": "Identity",
-                            "n": null,
-                            "b": null,
-                            "m": null,
-                            "l": null,
-                            "null": null,
-                            "bool": null,
-                            "ss": null,
-                            "ns": null,
-                            "bs": null
+                            "s": "Identity"
                           }
-                        },
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        }
                       },
                       "correspondingAuthor": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": false,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "bool": false
                       },
                       "type": {
-                        "s": "Contributor",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "Contributor"
                       }
-                    },
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    }
                   },
                   {
-                    "s": null,
-                    "n": null,
-                    "b": null,
                     "m": {
                       "sequence": {
-                        "s": null,
-                        "n": "2",
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "n": "2"
                       },
                       "identity": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
                         "m": {
                           "name": {
-                            "s": "van den Brink, Jeroen",
-                            "n": null,
-                            "b": null,
-                            "m": null,
-                            "l": null,
-                            "null": null,
-                            "bool": null,
-                            "ss": null,
-                            "ns": null,
-                            "bs": null
+                            "s": "Aboulfadl, Hisham"
                           },
                           "type": {
-                            "s": "Identity",
-                            "n": null,
-                            "b": null,
-                            "m": null,
-                            "l": null,
-                            "null": null,
-                            "bool": null,
-                            "ss": null,
-                            "ns": null,
-                            "bs": null
+                            "s": "Identity"
                           }
-                        },
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        }
                       },
                       "correspondingAuthor": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": false,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "bool": false
                       },
                       "type": {
-                        "s": "Contributor",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "Contributor"
                       }
-                    },
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    }
                   },
                   {
-                    "s": null,
-                    "n": null,
-                    "b": null,
                     "m": {
                       "sequence": {
-                        "s": null,
-                        "n": "3",
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "n": "3"
                       },
                       "identity": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
                         "m": {
                           "name": {
-                            "s": "Sudbø, Asle",
-                            "n": null,
-                            "b": null,
-                            "m": null,
-                            "l": null,
-                            "null": null,
-                            "bool": null,
-                            "ss": null,
-                            "ns": null,
-                            "bs": null
+                            "s": "Ross, Nils"
                           },
                           "type": {
-                            "s": "Identity",
-                            "n": null,
-                            "b": null,
-                            "m": null,
-                            "l": null,
-                            "null": null,
-                            "bool": null,
-                            "ss": null,
-                            "ns": null,
-                            "bs": null
+                            "s": "Identity"
                           }
-                        },
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        }
                       },
                       "correspondingAuthor": {
-                        "s": null,
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": false,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "bool": false
                       },
                       "type": {
-                        "s": "Contributor",
-                        "n": null,
-                        "b": null,
-                        "m": null,
-                        "l": null,
-                        "null": null,
-                        "bool": null,
-                        "ss": null,
-                        "ns": null,
-                        "bs": null
+                        "s": "Contributor"
                       }
-                    },
-                    "l": null,
-                    "null": null,
-                    "bool": null,
-                    "ss": null,
-                    "ns": null,
-                    "bs": null
+                    }
+                  },
+                  {
+                    "m": {
+                      "sequence": {
+                        "n": "4"
+                      },
+                      "identity": {
+                        "m": {
+                          "name": {
+                            "s": "Persson, Clas"
+                          },
+                          "type": {
+                            "s": "Identity"
+                          }
+                        }
+                      },
+                      "correspondingAuthor": {
+                        "bool": false
+                      },
+                      "type": {
+                        "s": "Contributor"
+                      }
+                    }
+                  },
+                  {
+                    "m": {
+                      "sequence": {
+                        "n": "5"
+                      },
+                      "identity": {
+                        "m": {
+                          "name": {
+                            "s": "Platzer-Björkman, Charlotte"
+                          },
+                          "type": {
+                            "s": "Identity"
+                          }
+                        }
+                      },
+                      "correspondingAuthor": {
+                        "bool": false
+                      },
+                      "type": {
+                        "s": "Contributor"
+                      }
+                    }
+                  },
+                  {
+                    "m": {
+                      "sequence": {
+                        "n": "6"
+                      },
+                      "identity": {
+                        "m": {
+                          "name": {
+                            "s": "Thuvander, Mattias"
+                          },
+                          "type": {
+                            "s": "Identity"
+                          }
+                        }
+                      },
+                      "correspondingAuthor": {
+                        "bool": false
+                      },
+                      "type": {
+                        "s": "Contributor"
+                      }
+                    }
+                  },
+                  {
+                    "m": {
+                      "sequence": {
+                        "n": "7"
+                      },
+                      "identity": {
+                        "m": {
+                          "name": {
+                            "s": "Vines, Lasse"
+                          },
+                          "type": {
+                            "s": "Identity"
+                          }
+                        }
+                      },
+                      "correspondingAuthor": {
+                        "bool": false
+                      },
+                      "type": {
+                        "s": "Contributor"
+                      }
+                    }
                   }
-                ],
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                ]
               },
               "type": {
-                "s": "EntityDescription",
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "s": "EntityDescription"
               },
               "alternativeTitles": {
-                "s": null,
-                "n": null,
-                "b": null,
-                "m": {},
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "m": {}
               },
               "tags": {
-                "s": null,
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": [],
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "l": []
               }
-            },
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            }
           },
           "publisherId": {
-            "s": "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934"
           },
           "createdDate": {
-            "s": "2020-08-14T10:28:52.565586Z",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "2020-08-18T11:58:40.390961Z"
           },
           "publisherOwnerDate": {
-            "s": "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934#kiva@unit.no#2020-08-12T10:30:10.019991Z",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934#tehe@unit.no#2020-08-18T12:40:18.887110Z"
           },
           "modifiedDate": {
-            "s": "2020-08-14T10:30:10.019991Z",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "2020-08-18T12:40:18.887110Z"
           },
           "publisher": {
-            "s": null,
-            "n": null,
-            "b": null,
             "m": {
               "id": {
-                "s": "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934",
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "s": "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934"
               },
               "type": {
-                "s": "Organization",
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "s": "Organization"
               }
-            },
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            }
+          },
+          "publishedDate": {
+            "s": "2020-08-18T12:36:28.283061Z"
           },
           "type": {
-            "s": "Publication",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "Publication"
           },
           "fileSet": {
-            "s": null,
-            "n": null,
-            "b": null,
             "m": {
               "files": {
-                "s": null,
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": [],
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "l": [
+                  {
+                    "m": {
+                      "identifier": {
+                        "s": "0dc1ad0d-8f40-4761-8d37-075a58f4eb66"
+                      },
+                      "license": {
+                        "m": {
+                          "identifier": {
+                            "s": "CC BY"
+                          },
+                          "type": {
+                            "s": "License"
+                          },
+                          "labels": {
+                            "m": {
+                              "nb": {
+                                "s": "CC BY"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "size": {
+                        "n": "582589"
+                      },
+                      "publisherAuthority": {
+                        "bool": false
+                      },
+                      "name": {
+                        "s": "pssb.202070025.pdf"
+                      },
+                      "administrativeAgreement": {
+                        "bool": false
+                      },
+                      "mimeType": {
+                        "s": "application/pdf"
+                      },
+                      "type": {
+                        "s": "File"
+                      }
+                    }
+                  }
+                ]
               },
               "type": {
-                "s": "FileSet",
-                "n": null,
-                "b": null,
-                "m": null,
-                "l": null,
-                "null": null,
-                "bool": null,
-                "ss": null,
-                "ns": null,
-                "bs": null
+                "s": "FileSet"
               }
-            },
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            }
           },
           "status": {
-            "s": "Topppublisering",
-            "n": null,
-            "b": null,
-            "m": null,
-            "l": null,
-            "null": null,
-            "bool": null,
-            "ss": null,
-            "ns": null,
-            "bs": null
+            "s": "Published"
           }
         },
-        "oldImage": null,
-        "sequenceNumber": "605305300000000014613445121",
-        "sizeBytes": 1434,
+        "sequenceNumber": "637843800000000029111076686",
+        "sizeBytes": 2107,
         "streamViewType": "NEW_IMAGE"
       },
-      "userIdentity": null,
-      "eventSourceARN": "arn:aws:dynamodb:eu-west-1:884807050265:table/nva_resources/stream/2020-08-13T08:41:25.491"
+      "eventSourceARN": "arn:aws:dynamodb:eu-west-1:884807050265:table/nva_resources/stream/2020-08-19T09:27:44.804"
     }
   ]
 }
