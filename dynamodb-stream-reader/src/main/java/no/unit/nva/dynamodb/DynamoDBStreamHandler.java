@@ -4,10 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import elasticsearch.ElasticSearchRestClient;
 import nva.commons.utils.JacocoGenerated;
-import nva.commons.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +32,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
      */
     @JacocoGenerated
     public DynamoDBStreamHandler() {
-
-
     }
 
     @Override
@@ -57,7 +53,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     }
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
-        String identifier = streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
+        String identifier = getIdentifierFromStreamRecord(streamRecord);
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
         logger.trace("valueMap={}", valueMap.toString());
 
@@ -82,22 +78,18 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .build();
 
         PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
-        try {
-            logger.debug("Upserting search index for identifier {} with values {}",
-                    identifier,  JsonUtils.objectMapper.writeValueAsString(flattenedPublication));
-        } catch (JsonProcessingException e) {
-            logger.debug("error logging:",e);
-        }
+
         elasticSearchClient.addDocumentToIndex(flattenedPublication);
     }
 
     private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
-        String identifier = streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
-        logger.trace("Deleting from search API publication with identifier: {}", identifier);
+        String identifier = getIdentifierFromStreamRecord(streamRecord);
         elasticSearchClient.removeDocumentFromIndex(identifier);
     }
 
-
+    private String getIdentifierFromStreamRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) {
+        return streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
+    }
 
 
 }

@@ -66,36 +66,38 @@ public class ValueMapFlattener {
     private void flatten(PublicationIndexDocument target, String prefix, Map<String, AttributeValue> valueMap) {
         logger.trace("flatten: prefix={} values={}", prefix, valueMap);
         valueMap.forEach((k, v) -> {
-            logger.trace("forEach (k={}, v={})", k, v);
             if (v != null) {
                 String key = addIndexPrefix(prefix, k);
-                if (v.getM() == null && v.getL() == null) {
+                if (isASimpleValue(v)) {
                     if (indexFilter.test(key)) {
-                        String value = v.getS();
-                        target.putIndexValue(indexMapper.apply(key), value);
+                        target.putIndexValue(indexMapper.apply(key), v.getS());
                     }
                 } else {
                     if (v.getL() == null) {
+                        // This must be a map element
                         flatten(target, key, v.getM());
                     } else {
-                        logger.debug("got L , key={}, v={}", key, v);
+                        // This must be a list/JSON-array
                         List<AttributeValue> listElements = v.getL();
                         for (AttributeValue attributeValue : listElements) {
                             String elementKey = key; // + "-" + i;
-                            if (attributeValue.getM() == null && attributeValue.getL() == null) {
+                            if (isASimpleValue(attributeValue)) {
                                 if (indexFilter.test(elementKey)) {
-                                    String value = attributeValue.getS();
-                                    target.putIndexValue(indexMapper.apply(elementKey), value);
+                                    target.putIndexValue(indexMapper.apply(elementKey), attributeValue.getS());
                                 }
                             } else {
                                 flatten(target, elementKey, attributeValue.getM());
                             }
-
                         }
                     }
                 }
             }
         });
+    }
+
+
+    private boolean isASimpleValue(AttributeValue attributeValue) {
+        return attributeValue.getM() == null && attributeValue.getL() == null;
     }
 
     private String addIndexPrefix(String prefix, String k) {

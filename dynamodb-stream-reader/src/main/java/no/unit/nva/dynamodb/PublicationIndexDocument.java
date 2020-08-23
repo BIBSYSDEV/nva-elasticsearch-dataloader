@@ -32,7 +32,7 @@ public class PublicationIndexDocument {
     @Override
     public String toString() {
         return "FlattenedPublicationIndexRecord{"
-                + "identifier='" + identifier + '\''
-                + ", indexValues=" + indexValues + '}';
+                + "identifier='" + getIdentifier() + '\''
+                + ", indexValues=" + getIndexValues() + '}';
     }
 }
