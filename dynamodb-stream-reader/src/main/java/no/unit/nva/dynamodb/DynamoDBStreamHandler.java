@@ -9,6 +9,8 @@ import nva.commons.utils.JacocoGenerated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -24,7 +26,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String TITLE = "title";
     public static final String NAME = "name";
     public static final String TYPE = "type";
-    private final ElasticSearchRestClient elasticSearchClient = new ElasticSearchRestClient();
+    private final ElasticSearchRestClient elasticSearchClient;
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
     /**
@@ -32,7 +34,19 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
      */
     @JacocoGenerated
     public DynamoDBStreamHandler() {
+        this(new ElasticSearchRestClient());
     }
+
+    /**
+     * Constructor for DynamoDBStreamHandler for testing.
+     * @param elasticSearchRestClient elasticSearchRestClient to be injected for testing
+     */
+    @JacocoGenerated
+    public DynamoDBStreamHandler(ElasticSearchRestClient elasticSearchRestClient) {
+        this.elasticSearchClient = elasticSearchRestClient;
+    }
+
+
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
@@ -40,10 +54,18 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
             switch (streamRecord.getEventName()) {
                 case "INSERT":
                 case "MODIFY":
-                    upsertSearchIndex(streamRecord);
+                    try {
+                        upsertSearchIndex(streamRecord);
+                    } catch (InterruptedException | URISyntaxException | IOException e) {
+                        logger.error("Error Upserting index", e);
+                    }
                     break;
                 case "REMOVE":
-                    removeFromSearchIndex(streamRecord);
+                    try {
+                        removeFromSearchIndex(streamRecord);
+                    } catch (InterruptedException | URISyntaxException | IOException e) {
+                        logger.error("Error deleting from index", e);
+                    }
                     break;
                 default:
                     throw new RuntimeException("Not a known operation");
@@ -52,7 +74,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         return "Handled " + event.getRecords().size() + " records";
     }
 
-    private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
+    private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
+            throws InterruptedException, IOException, URISyntaxException {
         String identifier = getIdentifierFromStreamRecord(streamRecord);
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
         logger.trace("valueMap={}", valueMap.toString());
@@ -78,11 +101,12 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .build();
 
         PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
-
         elasticSearchClient.addDocumentToIndex(flattenedPublication);
+
     }
 
-    private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord) {
+    private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
+            throws InterruptedException, IOException, URISyntaxException {
         String identifier = getIdentifierFromStreamRecord(streamRecord);
         elasticSearchClient.removeDocumentFromIndex(identifier);
     }
