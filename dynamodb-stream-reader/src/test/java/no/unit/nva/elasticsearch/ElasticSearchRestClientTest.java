@@ -1,6 +1,7 @@
 package no.unit.nva.elasticsearch;
 
 import elasticsearch.ElasticSearchRestClient;
+import nva.commons.utils.Environment;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,17 +17,11 @@ import static org.mockito.Mockito.when;
 public class ElasticSearchRestClientTest {
 
     @Test
-    @DisplayName("Default constructor")
-    public void testDefaultConstructor() {
-        ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient();
-        assertNotNull(elasticSearchRestClient);
-    }
-
-    @Test
     @DisplayName("Constructor with HTTPClient parameter")
     public void testConstructorWithParameter() {
         HttpClient httpClient = mock(HttpClient.class);
-        ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient(httpClient);
+        Environment environment = mock(Environment.class);
+        ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);
         assertNotNull(elasticSearchRestClient);
     }
 
@@ -34,13 +29,13 @@ public class ElasticSearchRestClientTest {
     @DisplayName("doSend")
     public void testDoSend() throws IOException, InterruptedException {
         HttpClient httpClient = mock(HttpClient.class);
-        ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient(httpClient);
+        Environment environment = mock(Environment.class);
+        ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);
         assertNotNull(elasticSearchRestClient);
         HttpRequest request = mock(HttpRequest.class);
         HttpResponse.BodyHandler bodyHandler = mock(HttpResponse.BodyHandler.class);
         when(httpClient.send(request, bodyHandler)).thenReturn(mock(HttpResponse.class));
         HttpResponse<String> response = elasticSearchRestClient.doSend(request);
     }
-
 
 }

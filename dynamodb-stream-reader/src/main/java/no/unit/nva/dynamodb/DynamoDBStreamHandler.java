@@ -5,36 +5,39 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
 import elasticsearch.ElasticSearchRestClient;
+import nva.commons.utils.Environment;
 import nva.commons.utils.JacocoGenerated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
+    private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
+
     public static final String IDENTIFIER = "identifier";
     public static final String DATE_YEAR = "entityDescription.date.year";
     public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
-    public static final String CONTRIBUTORS_IDENTIITY_NAME = "entityDescription.contributors.identity.name";
+    public static final String CONTRIBUTORS_IDENTITY_NAME = "entityDescription.contributors.identity.name";
     public static final String PUBLICATION_TYPE = "publicationInstance.type";
     public static final String YEAR = "year";
     public static final String TITLE = "title";
     public static final String NAME = "name";
     public static final String TYPE = "type";
     private final ElasticSearchRestClient elasticSearchClient;
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
     /**
      * Default constructor for DynamoDBStreamHandler.
      */
     @JacocoGenerated
     public DynamoDBStreamHandler() {
-        this(new ElasticSearchRestClient());
+        this(new ElasticSearchRestClient(HttpClient.newHttpClient(), new Environment()));
     }
 
     /**
@@ -83,14 +86,14 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         Predicate<String> indexfilter = new IndexFilterBuilder()
                 .withIndex(DATE_YEAR)
                 .withIndex(DESCRIPTION_MAIN_TITLE)
-                .withIndex(CONTRIBUTORS_IDENTIITY_NAME)
+                .withIndex(CONTRIBUTORS_IDENTITY_NAME)
                 .withIndex(PUBLICATION_TYPE)
                 .build();
 
         UnaryOperator<String> indexMapping = new IndexMapperBuilder()
                 .withIndex(DATE_YEAR, YEAR)
                 .withIndex(DESCRIPTION_MAIN_TITLE, TITLE)
-                .withIndex(CONTRIBUTORS_IDENTIITY_NAME, NAME)
+                .withIndex(CONTRIBUTORS_IDENTITY_NAME, NAME)
                 .withIndex(PUBLICATION_TYPE, TYPE)
                 .build();
 
@@ -114,6 +117,5 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     private String getIdentifierFromStreamRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) {
         return streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
     }
-
 
 }

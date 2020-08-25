@@ -1,6 +1,7 @@
 package elasticsearch;
 
 import no.unit.nva.dynamodb.PublicationIndexDocument;
+import nva.commons.utils.Environment;
 import nva.commons.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,19 +18,26 @@ public class ElasticSearchRestClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchRestClient.class);
 
-    private static final String ELASTICSEARCH_ENDPOINT_INDEX = "resources";
-    private static final String ELASTICSEARCH_ENDPOINT_ADDRESS =
-            "http://search-elastic-nvaela-1eycqyjqr5n01-ovx3m2iroxv222s6bu5a7ow3jm.eu-west-1.es.amazonaws.com";
     private static final String ELASTICSEARCH_ENDPOINT_OPERATION = "_doc";
+    private final HttpClient client;
+    private final String elasticSearchEndpointAddress;
+    private final String elasticSearchEndpointIndex;
 
-    private  final HttpClient client;
+    public static final String ELASTICSEARCH_ENDPOINT_INDEX_KEY = "ELASTICSEARCH_ENDPOINT_INDEX";
+    public static final String ELASTICSEARCH_ENDPOINT_ADDRESS_KEY = "ELASTICSEARCH_ENDPOINT_ADDRESS";
 
-    public ElasticSearchRestClient() {
-        this(HttpClient.newHttpClient());
-    }
-
-    public ElasticSearchRestClient(HttpClient client) {
-        this.client = client;
+    /**
+     * Creates a new ElasticSearchRestClient.
+     *
+     * @param httpClient Client to speak http
+     * @param environment Environment with properties
+     */
+    public ElasticSearchRestClient(HttpClient httpClient, Environment environment) {
+        this.client = httpClient;
+        this.elasticSearchEndpointAddress = environment.readEnv(ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
+        this.elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+        logger.info("using Elasticsearch endpoint {} and index {}",
+                elasticSearchEndpointAddress, elasticSearchEndpointIndex );
     }
 
     /**
@@ -78,7 +86,6 @@ public class ElasticSearchRestClient {
                 .DELETE()
                 .build();
 
-
         logger.debug("DELETEing {} ", createUpsertDocumentURI(identifier));
         HttpResponse<String> response = doSend(request);
         logger.debug(response.body());
@@ -87,18 +94,18 @@ public class ElasticSearchRestClient {
     }
 
     public HttpResponse<String> doSend(HttpRequest request) throws IOException, InterruptedException {
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+        return httpResponse;
     }
 
     private URI createUpsertDocumentURI(String identifier) throws URISyntaxException {
         StringJoiner stringJoiner = new StringJoiner("/");
         return  new URI(
-                stringJoiner.add(ELASTICSEARCH_ENDPOINT_ADDRESS)
-                        .add(ELASTICSEARCH_ENDPOINT_INDEX)
+                stringJoiner.add(elasticSearchEndpointAddress)
+                        .add(elasticSearchEndpointIndex)
                         .add(ELASTICSEARCH_ENDPOINT_OPERATION)
                         .add(identifier)
                         .toString());
     }
-
 
 }
