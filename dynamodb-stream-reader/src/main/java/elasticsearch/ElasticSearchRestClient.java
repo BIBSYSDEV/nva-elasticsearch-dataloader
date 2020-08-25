@@ -1,6 +1,5 @@
 package elasticsearch;
 
-import no.unit.nva.dynamodb.PublicationIndexDocument;
 import nva.commons.utils.Environment;
 import nva.commons.utils.JsonUtils;
 import org.slf4j.Logger;
@@ -12,6 +11,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Map;
 
 public class ElasticSearchRestClient {
 
@@ -40,7 +40,7 @@ public class ElasticSearchRestClient {
         elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
         elasticSeachEndpointScheme = environment.readEnv(ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
         logger.info("using Elasticsearch endpoint {} {} and index {}",
-                elasticSeachEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex );
+                elasticSeachEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex);
     }
 
     /**
@@ -51,21 +51,22 @@ public class ElasticSearchRestClient {
      * @throws IOException thrown hen service i not available
      * @throws InterruptedException thrown when service i interrupted
      */
-    public boolean addDocumentToIndex(PublicationIndexDocument document)
+    public boolean addDocumentToIndex(Map<String, String> document)
             throws URISyntaxException, IOException, InterruptedException {
         logger.debug("Upserting search index  with values {}", document);
 
         String requestBody = "";
         requestBody = JsonUtils.objectMapper.writeValueAsString(document);
+        String identifier = document.get("identifier");
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(createUpsertDocumentURI(document.getIdentifier()))
+                .uri(createUpsertDocumentURI(identifier))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody)) // GET is default
                 .build();
 
 
-        logger.debug("POSTing {} to endpoint {}", requestBody, createUpsertDocumentURI(document.getIdentifier()));
+        logger.debug("POSTing {} to endpoint {}", requestBody, createUpsertDocumentURI(identifier));
         HttpResponse<String> response = doSend(request);
         logger.debug(response.body());
         return true;
@@ -102,7 +103,9 @@ public class ElasticSearchRestClient {
     }
 
     private URI createUpsertDocumentURI(String identifier) throws URISyntaxException {
-        String uriString = String.format(ELASTICSEARCH_ENDPOINT_URI_TEMPLATE, elasticSeachEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex, ELASTICSEARCH_ENDPOINT_OPERATION, identifier);
+        String uriString = String.format(ELASTICSEARCH_ENDPOINT_URI_TEMPLATE,
+                elasticSeachEndpointScheme, elasticSearchEndpointAddress,
+                elasticSearchEndpointIndex, ELASTICSEARCH_ENDPOINT_OPERATION, identifier);
         return URI.create(uriString);
     }
 

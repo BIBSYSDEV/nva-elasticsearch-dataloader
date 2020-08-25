@@ -103,7 +103,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .withSeparator(".")
                 .build();
 
-        PublicationIndexDocument flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
+        Map<String, String> flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
         elasticSearchClient.addDocumentToIndex(flattenedPublication);
 
     }

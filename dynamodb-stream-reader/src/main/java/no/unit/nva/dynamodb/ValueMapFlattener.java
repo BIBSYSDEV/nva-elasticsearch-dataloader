@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeVal
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -57,20 +58,22 @@ public class ValueMapFlattener {
      * @param valueMap Map containing the values associated with the record
      * @return A document usable for indexing in elasticsearch
      */
-    public PublicationIndexDocument flattenValueMap(String identifier, Map<String, AttributeValue> valueMap) {
-        PublicationIndexDocument flattenedPublication = new PublicationIndexDocument(identifier);
+    public Map<String, String> flattenValueMap(String identifier, Map<String, AttributeValue> valueMap) {
+        Map<String, String> flattenedPublication = new HashMap<>();
+        flattenedPublication.put("identifier", identifier);
+
         flatten(flattenedPublication, "", valueMap);
         return flattenedPublication;
     }
 
-    private void flatten(PublicationIndexDocument target, String prefix, Map<String, AttributeValue> valueMap) {
+    private void flatten(Map<String, String> target, String prefix, Map<String, AttributeValue> valueMap) {
         logger.trace("flatten: prefix={} values={}", prefix, valueMap);
         valueMap.forEach((k, v) -> {
             if (v != null) {
                 String key = addIndexPrefix(prefix, k);
                 if (isASimpleValue(v)) {
                     if (indexFilter.test(key)) {
-                        target.putIndexValue(indexMapper.apply(key), v.getS());
+                        target.put(indexMapper.apply(key), v.getS());
                     }
                 } else {
                     if (v.getL() == null) {
@@ -83,7 +86,7 @@ public class ValueMapFlattener {
                             String elementKey = key; // + "-" + i;
                             if (isASimpleValue(attributeValue)) {
                                 if (indexFilter.test(elementKey)) {
-                                    target.putIndexValue(indexMapper.apply(elementKey), attributeValue.getS());
+                                    target.put(indexMapper.apply(elementKey), attributeValue.getS());
                                 }
                             } else {
                                 flatten(target, elementKey, attributeValue.getM());
