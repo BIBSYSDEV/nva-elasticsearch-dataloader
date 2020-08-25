@@ -12,7 +12,6 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.StringJoiner;
 
 public class ElasticSearchRestClient {
 
@@ -22,9 +21,12 @@ public class ElasticSearchRestClient {
     private final HttpClient client;
     private final String elasticSearchEndpointAddress;
     private final String elasticSearchEndpointIndex;
+    private final String elasticSeachEndpointScheme;
 
     public static final String ELASTICSEARCH_ENDPOINT_INDEX_KEY = "ELASTICSEARCH_ENDPOINT_INDEX";
     public static final String ELASTICSEARCH_ENDPOINT_ADDRESS_KEY = "ELASTICSEARCH_ENDPOINT_ADDRESS";
+    public static final String ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY = "ELASTICSEARCH_ENDPOINT_API_SCHEME";
+    public static final String ELASTICSEARCH_ENDPOINT_URI_TEMPLATE = "%s://%s/%s/%s/%s";
 
     /**
      * Creates a new ElasticSearchRestClient.
@@ -33,11 +35,12 @@ public class ElasticSearchRestClient {
      * @param environment Environment with properties
      */
     public ElasticSearchRestClient(HttpClient httpClient, Environment environment) {
-        this.client = httpClient;
-        this.elasticSearchEndpointAddress = environment.readEnv(ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
-        this.elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
-        logger.info("using Elasticsearch endpoint {} and index {}",
-                elasticSearchEndpointAddress, elasticSearchEndpointIndex );
+        client = httpClient;
+        elasticSearchEndpointAddress = environment.readEnv(ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
+        elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+        elasticSeachEndpointScheme = environment.readEnv(ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
+        logger.info("using Elasticsearch endpoint {} {} and index {}",
+                elasticSeachEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex );
     }
 
     /**
@@ -99,13 +102,8 @@ public class ElasticSearchRestClient {
     }
 
     private URI createUpsertDocumentURI(String identifier) throws URISyntaxException {
-        StringJoiner stringJoiner = new StringJoiner("/");
-        return  new URI(
-                stringJoiner.add(elasticSearchEndpointAddress)
-                        .add(elasticSearchEndpointIndex)
-                        .add(ELASTICSEARCH_ENDPOINT_OPERATION)
-                        .add(identifier)
-                        .toString());
+        String uriString = String.format(ELASTICSEARCH_ENDPOINT_URI_TEMPLATE, elasticSeachEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex, ELASTICSEARCH_ENDPOINT_OPERATION, identifier);
+        return URI.create(uriString);
     }
 
 }
