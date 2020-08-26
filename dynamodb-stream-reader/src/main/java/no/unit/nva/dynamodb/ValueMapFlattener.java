@@ -14,6 +14,8 @@ public class ValueMapFlattener {
 
     private static final Logger logger = LoggerFactory.getLogger(ValueMapFlattener.class);
 
+    public static final String IDENTIFIER_KEY = "identifier";
+
     private final String separator;
     private final Predicate<String> indexFilter;
     private final UnaryOperator<String> indexMapper;
@@ -32,7 +34,7 @@ public class ValueMapFlattener {
 
         public Builder withIndexFilter(Predicate<String> filter) {
             this.indexFilter = filter;
-            return this;  //By returning the builder each time, we can create a fluent interface.
+            return this;
         }
 
         public Builder withIndexMapping(UnaryOperator<String> mapping) {
@@ -60,7 +62,7 @@ public class ValueMapFlattener {
      */
     public Map<String, String> flattenValueMap(String identifier, Map<String, AttributeValue> valueMap) {
         Map<String, String> flattenedPublication = new HashMap<>();
-        flattenedPublication.put("identifier", identifier);
+        flattenedPublication.put(IDENTIFIER_KEY, identifier);
 
         flatten(flattenedPublication, "", valueMap);
         return flattenedPublication;

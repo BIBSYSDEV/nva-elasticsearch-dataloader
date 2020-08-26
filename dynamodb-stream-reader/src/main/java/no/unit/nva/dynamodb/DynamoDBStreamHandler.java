@@ -30,6 +30,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String TITLE = "title";
     public static final String NAME = "author";
     public static final String TYPE = "publicationType";
+    public static final String ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE = "Error processing DynamoDBEvent {}";
+    public static final String SUCCESS_MESSAGE = "200 OK";
     private final ElasticSearchRestClient elasticSearchClient;
 
     /**
@@ -42,6 +44,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     /**
      * Constructor for DynamoDBStreamHandler for testing.
+     *
      * @param elasticSearchRestClient elasticSearchRestClient to be injected for testing
      */
     @JacocoGenerated
@@ -50,31 +53,28 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     }
 
 
-
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
-        for (DynamodbEvent.DynamodbStreamRecord streamRecord : event.getRecords()) {
-            switch (streamRecord.getEventName()) {
-                case "INSERT":
-                case "MODIFY":
-                    try {
+        try {
+            for (DynamodbEvent.DynamodbStreamRecord streamRecord : event.getRecords()) {
+                switch (streamRecord.getEventName()) {
+                    case "INSERT":
+                    case "MODIFY":
                         upsertSearchIndex(streamRecord);
-                    } catch (InterruptedException | URISyntaxException | IOException e) {
-                        logger.error("Error Upserting index", e);
-                    }
-                    break;
-                case "REMOVE":
-                    try {
+                        break;
+                    case "REMOVE":
                         removeFromSearchIndex(streamRecord);
-                    } catch (InterruptedException | URISyntaxException | IOException e) {
-                        logger.error("Error deleting from index", e);
-                    }
-                    break;
-                default:
-                    throw new RuntimeException("Not a known operation");
+                        break;
+                    default:
+                        throw new RuntimeException("Not a known operation");
+                }
             }
+        } catch (InterruptedException | URISyntaxException | IOException e) {
+            logger.error(ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE, e, event);
+            throw new RuntimeException(e);
         }
-        return "Handled " + event.getRecords().size() + " records";
+
+        return SUCCESS_MESSAGE;
     }
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
