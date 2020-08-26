@@ -56,7 +56,6 @@ public class ElasticSearchRestClient {
     /**
      * Adds or insert a document to an elasticsearch index.
      * @param document the document to be inserted
-     * @return true if operation is an success
      * @throws URISyntaxException thrown when uri is misconfigured
      * @throws IOException thrown hen service i not available
      * @throws InterruptedException thrown when service i interrupted
@@ -71,7 +70,8 @@ public class ElasticSearchRestClient {
         logger.debug(response.body());
     }
 
-    private HttpRequest createHttpRequest(Map<String, String> document) throws JsonProcessingException, URISyntaxException {
+    private HttpRequest createHttpRequest(Map<String, String> document) throws
+            JsonProcessingException, URISyntaxException {
         String requestBody = JsonUtils.objectMapper.writeValueAsString(document);
         String identifier = document.get(IDENTIFIER_KEY);
 
@@ -93,7 +93,6 @@ public class ElasticSearchRestClient {
     /**
      * Removes an indexed document from elasticsearch index.
      * @param identifier identifier of document to remove from elasticsearch
-     * @return true if operatrion is successful
      * @throws URISyntaxException thrown when uri is misconfigured
      * @throws IOException thrown hen service i not available
      * @throws InterruptedException thrown when service i interrupted
