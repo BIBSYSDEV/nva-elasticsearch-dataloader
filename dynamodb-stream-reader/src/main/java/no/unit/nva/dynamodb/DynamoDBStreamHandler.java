@@ -70,7 +70,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 }
             }
         } catch (InterruptedException | URISyntaxException | IOException e) {
-            logger.error(ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE, e, event);
+            logger.error(ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE, e);
             throw new RuntimeException(e);
         }
 
