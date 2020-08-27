@@ -14,8 +14,9 @@ public class ElasticSearchIndexDocumentTest {
     private static final String SERVICE_URL = "http://localhost/";
     private static final String INTERNAL_IDENTIFIER = "id";
     public static final String SAMPLE_CONTRIBUTOR = "Doe, John";
+    public static final String SAMPLE_CONTRIBUTOR2 = "Doe, Jane";
     public static final String SAMPLE_DATE = "2020-08-26";
-    public static final String SAMPLE_RESOURCETYPE = "";
+    public static final String SAMPLE_RESOURCETYPE = "sampleResourceType";
     public static final String SAMPLE_TITLE = "This Is A Sample Title";
 
     @Test
@@ -40,7 +41,8 @@ public class ElasticSearchIndexDocumentTest {
 
         document.setResourceType(SAMPLE_RESOURCETYPE);
         document.setDate(SAMPLE_DATE);
-        document.addContributor(SAMPLE_CONTRIBUTOR);
+        document.addContributorName(SAMPLE_CONTRIBUTOR);
+        document.addContributorName(SAMPLE_CONTRIBUTOR2);
         document.setTitle(SAMPLE_TITLE);
 
         String json = document.toJson();
@@ -49,6 +51,7 @@ public class ElasticSearchIndexDocumentTest {
         assertTrue(json.contains(SAMPLE_DATE));
         assertTrue(json.contains(SAMPLE_RESOURCETYPE));
         assertTrue(json.contains(SAMPLE_CONTRIBUTOR));
+        assertTrue(json.contains(SAMPLE_CONTRIBUTOR2));
         assertTrue(json.contains(SAMPLE_TITLE));
 
     }

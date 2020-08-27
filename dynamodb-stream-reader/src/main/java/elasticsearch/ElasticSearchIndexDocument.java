@@ -5,10 +5,10 @@ import nva.commons.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class ElasticSearchIndexDocument {
 
@@ -20,6 +20,7 @@ public class ElasticSearchIndexDocument {
     private static final String RESOURCE_TYPE_KEY = "type";
     public static final String ID_KEY = "id";
     public static final String EMPTY_STRING = "";
+    private static final String NAME_KEY = "name";
 
     private final String internalIdentifier;
 
@@ -57,9 +58,13 @@ public class ElasticSearchIndexDocument {
      * The document an hold multiple contributors
      * @param name name of the contributor
      */
-    public void addContributor(String name) {
-        Set<String> contributors = (Set<String>) values.computeIfAbsent(CONTRIBUTORS_KEY, l ->  new HashSet<String>());
-        contributors.add(name);
+    public void addContributorName(String name) {
+        List<Object> contributors =
+                (List<Object>) values.computeIfAbsent(CONTRIBUTORS_KEY, l ->  new ArrayList<Object>());
+
+        Map<String, String> contributorMap = new HashMap<>();
+        contributorMap.put(NAME_KEY,name);
+        contributors.add(contributorMap);
         values.put(CONTRIBUTORS_KEY,contributors);
     }
 
