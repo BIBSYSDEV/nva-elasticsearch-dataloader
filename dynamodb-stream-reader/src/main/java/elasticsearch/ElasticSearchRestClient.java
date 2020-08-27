@@ -32,6 +32,7 @@ public class ElasticSearchRestClient {
     public static final String ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY = "ELASTICSEARCH_ENDPOINT_API_SCHEME";
     public static final String ELASTICSEARCH_ENDPOINT_URI_TEMPLATE = "%s://%s/%s/%s/%s";
     public static final String POSTING_TO_ENDPOINT_LOG_MESSAGE = "POSTing {} to endpoint {}";
+    public static final String MISSING_IN_ENVIRONMENT_ERROR = "Missing '%s' in environment";
 
     private final HttpClient client;
     private final String elasticSearchEndpointAddress;
@@ -47,8 +48,21 @@ public class ElasticSearchRestClient {
     public ElasticSearchRestClient(HttpClient httpClient, Environment environment) {
         client = httpClient;
         elasticSearchEndpointAddress = environment.readEnv(ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
+        if (elasticSearchEndpointAddress == null) {
+            throw new IllegalArgumentException(
+                    String.format(MISSING_IN_ENVIRONMENT_ERROR, "elasticSearchEndpointAddress"));
+        }
         elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+        if (elasticSearchEndpointIndex == null) {
+            throw new IllegalArgumentException(
+                    String.format(MISSING_IN_ENVIRONMENT_ERROR, "elasticSearchEndpointIndex"));
+        }
         elasticSearchEndpointScheme = environment.readEnv(ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
+        if (elasticSearchEndpointScheme == null) {
+            throw new IllegalArgumentException(
+                    String.format(MISSING_IN_ENVIRONMENT_ERROR, "elasticSearchEndpointScheme"));
+        }
+
         logger.info(INITIAL_LOG_MESSAGE,
                 elasticSearchEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex);
     }
@@ -82,12 +96,11 @@ public class ElasticSearchRestClient {
     }
 
     private HttpRequest buildHttpRequest(String requestBody, String identifier) throws URISyntaxException {
-        HttpRequest request = HttpRequest.newBuilder()
+        return HttpRequest.newBuilder()
                 .uri(createUpsertDocumentURI(identifier))
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody)) // GET is default
                 .build();
-        return request;
     }
 
     /**
@@ -112,9 +125,8 @@ public class ElasticSearchRestClient {
         logger.debug(response.body());
     }
 
-    public HttpResponse<String> doSend(HttpRequest request) throws IOException, InterruptedException {
-        HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return httpResponse;
+    private HttpResponse<String> doSend(HttpRequest request) throws IOException, InterruptedException {
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     private URI createUpsertDocumentURI(String identifier) throws URISyntaxException {

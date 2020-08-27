@@ -8,17 +8,31 @@ import org.junit.jupiter.api.Test;
 import java.net.http.HttpClient;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ElasticSearchRestClientTest {
 
     @Test
-    @DisplayName("Constructor with HTTPClient parameter")
-    public void testConstructorWithParameter() {
+    @DisplayName("testConstructorWithParameters")
+    public void testConstructorWithParameterEnvironmentDefined() {
         HttpClient httpClient = mock(HttpClient.class);
         Environment environment = mock(Environment.class);
+        when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY)).thenReturn("localhost");
+        when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_INDEX_KEY)).thenReturn("resources");
+        when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY)).thenReturn("http");
         ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);
         assertNotNull(elasticSearchRestClient);
     }
+
+    @Test
+    @DisplayName("testConstructorWithParameterMissingEnvironmentVariablesShouldFail")
+    public void testConstructorWithParameterMissingEnvironmentVariablesShouldFail() {
+        HttpClient httpClient = mock(HttpClient.class);
+        Environment environment = mock(Environment.class);
+        assertThrows(IllegalArgumentException.class, () -> new ElasticSearchRestClient(httpClient, environment));
+    }
+
 
 }

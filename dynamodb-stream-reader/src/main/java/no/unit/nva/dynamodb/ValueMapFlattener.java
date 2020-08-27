@@ -29,7 +29,7 @@ public class ValueMapFlattener {
 
         public Builder withSeparator(String separator) {
             this.separator = separator;
-            return this;  //By returning the builder each time, we can create a fluent interface.
+            return this;
         }
 
         public Builder withIndexFilter(Predicate<String> filter) {

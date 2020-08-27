@@ -79,11 +79,11 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
             throws InterruptedException, IOException, URISyntaxException {
+
         String identifier = getIdentifierFromStreamRecord(streamRecord);
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
-        logger.trace("valueMap={}", valueMap.toString());
 
-        Predicate<String> indexfilter = new IndexFilterBuilder()
+        Predicate<String> indexFilter = new IndexFilterBuilder()
                 .withIndex(DATE_YEAR)
                 .withIndex(DESCRIPTION_MAIN_TITLE)
                 .withIndex(CONTRIBUTORS_IDENTITY_NAME)
@@ -98,7 +98,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .build();
 
         ValueMapFlattener flattener = new ValueMapFlattener.Builder()
-                .withIndexFilter(indexfilter)
+                .withIndexFilter(indexFilter)
                 .withIndexMapping(indexMapping)
                 .withSeparator(".")
                 .build();

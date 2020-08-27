@@ -27,7 +27,7 @@ public class IndexMapperBuilderTest {
     @Test
     @DisplayName("Testing IndexMapperBuilder creating Operator with passthru behavior")
     public void testIndexFilterWithPassthru() {
-        UnaryOperator<String> operator = new IndexMapperBuilder().doPassthru().build();
+        UnaryOperator<String> operator = new IndexMapperBuilder().doPassThrough().build();
         assertNotNull(operator);
         assertEquals(DUMMYINDEX, operator.apply(DUMMYINDEX));
     }

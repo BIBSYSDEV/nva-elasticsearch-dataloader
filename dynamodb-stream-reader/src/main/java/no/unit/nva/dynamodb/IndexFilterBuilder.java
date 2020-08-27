@@ -16,7 +16,7 @@ public class IndexFilterBuilder {
      */
     public IndexFilterBuilder withIndex(String index) {
         wantedIndexes.add(index);
-        return this;  //By returning the builder each time, we can create a fluent interface.
+        return this;
     }
 
     /**

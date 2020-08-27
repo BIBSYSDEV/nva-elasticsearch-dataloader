@@ -7,7 +7,7 @@ import java.util.function.UnaryOperator;
 public class IndexMapperBuilder {
 
     private final Map<String, String> indexMapping = new HashMap<>();
-    private boolean passthru;
+    private boolean passThrough;
 
     /**
      * Adds a mapping of an index.
@@ -24,8 +24,8 @@ public class IndexMapperBuilder {
      * Let this filter alllow all indexes.
      * @return Builder to generate the wanted operation
      */
-    public IndexMapperBuilder doPassthru() {
-        this.passthru = true;
+    public IndexMapperBuilder doPassThrough() {
+        this.passThrough = true;
         return this;
     }
 
@@ -34,7 +34,7 @@ public class IndexMapperBuilder {
      * @return UnaryOperation to be used
      */
     public UnaryOperator<String> build() {
-        if (!passthru) {
+        if (!passThrough) {
             return index -> indexMapping.get(index);
         } else {
             return index -> indexMapping.getOrDefault(index, index);

@@ -60,16 +60,16 @@ public class DynamoDBStreamHandlerTest {
     }
 
     @Test
-    @DisplayName("MODIFY DynamoDBStreamEvent")
-    public void handleModifyEvent() throws IOException {
+    @DisplayName("testHandlerHandleSimpleModifyEventWithoutProblem")
+    public void testHandlerHandleSimpleModifyEventWithoutProblem() throws IOException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
         String response =  handler.handleRequest(requestEvent, context);
         assertNotNull(response);
     }
 
     @Test
-    @DisplayName("INSERT DynamoDBStreamEvent")
-    public void handleInsertEvent() throws IOException {
+    @DisplayName("testHandlerHandleSimpleInsertEventWithoutProblem")
+    public void testHandlerHandleSimpleInsertEventWithoutProblem() throws IOException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_INSERT_EVENT_FILENAME);
         String response =  handler.handleRequest(requestEvent, context);
         assertNotNull(response);
@@ -77,23 +77,23 @@ public class DynamoDBStreamHandlerTest {
 
 
     @Test
-    @DisplayName("REMOVE DynamoDBStreamEvent")
-    public void handleRemoveEvent() throws IOException {
+    @DisplayName("testHandlerHandleSimpleRemoveEventWithoutProblem")
+    public void testHandlerHandleSimpleRemoveEventWithoutProblem() throws IOException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_REMOVE_EVENT_FILENAME);
         String response =  handler.handleRequest(requestEvent, context);
         assertNotNull(response);
     }
 
     @Test
-    @DisplayName("DynamoDBStreamEvent without correct operation")
-    public void handleUnknownEvent() throws IOException {
+    @DisplayName("testHandleUnknownEventToGiveException")
+    public void testHandleUnknownEventToGiveException() throws IOException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_UNKNOWN_EVENT_FILENAME);
         assertThrows(RuntimeException.class, () -> handler.handleRequest(requestEvent, context));
     }
 
     @Test
-    @DisplayName("Test exception when handling event")
-    public void handleExceptionInEventHandling() throws IOException, InterruptedException {
+    @DisplayName("testHandleExceptionInEventHandlingShouldGiveException")
+    public void testHandleExceptionInEventHandlingShouldGiveException() throws IOException, InterruptedException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
         doThrow(IOException.class).when(httpClient).send(any(), any());
         assertThrows(RuntimeException.class, () -> handler.handleRequest(requestEvent, context));
