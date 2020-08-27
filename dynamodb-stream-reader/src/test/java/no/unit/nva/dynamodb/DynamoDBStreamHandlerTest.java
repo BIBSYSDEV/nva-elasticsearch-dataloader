@@ -4,13 +4,17 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import elasticsearch.ElasticSearchRestClient;
 import nva.commons.utils.Environment;
+import nva.commons.utils.IoUtils;
+import nva.commons.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -58,7 +62,7 @@ public class DynamoDBStreamHandlerTest {
     @Test
     @DisplayName("MODIFY DynamoDBStreamEvent")
     public void handleModifyEvent() throws IOException {
-        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
+        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
         String response =  handler.handleRequest(requestEvent, context);
         assertNotNull(response);
     }
@@ -66,7 +70,7 @@ public class DynamoDBStreamHandlerTest {
     @Test
     @DisplayName("INSERT DynamoDBStreamEvent")
     public void handleInsertEvent() throws IOException {
-        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_INSERT_EVENT_FILENAME);
+        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_INSERT_EVENT_FILENAME);
         String response =  handler.handleRequest(requestEvent, context);
         assertNotNull(response);
     }
@@ -75,7 +79,7 @@ public class DynamoDBStreamHandlerTest {
     @Test
     @DisplayName("REMOVE DynamoDBStreamEvent")
     public void handleRemoveEvent() throws IOException {
-        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_REMOVE_EVENT_FILENAME);
+        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_REMOVE_EVENT_FILENAME);
         String response =  handler.handleRequest(requestEvent, context);
         assertNotNull(response);
     }
@@ -83,18 +87,22 @@ public class DynamoDBStreamHandlerTest {
     @Test
     @DisplayName("DynamoDBStreamEvent without correct operation")
     public void handleUnknownEvent() throws IOException {
-        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_UNKNOWN_EVENT_FILENAME);
+        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_UNKNOWN_EVENT_FILENAME);
         assertThrows(RuntimeException.class, () -> handler.handleRequest(requestEvent, context));
     }
 
     @Test
     @DisplayName("Test exception when handling event")
     public void handleExceptionInEventHandling() throws IOException, InterruptedException {
-        DynamodbEvent requestEvent = ResourceUtils.loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
+        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
         doThrow(IOException.class).when(httpClient).send(any(), any());
         assertThrows(RuntimeException.class, () -> handler.handleRequest(requestEvent, context));
     }
 
+    private DynamodbEvent loadEventFromResourceFile(String filename) throws IOException {
+        InputStream is = IoUtils.inputStreamFromResources(Paths.get(filename));
+        return JsonUtils.objectMapper.readValue(is, DynamodbEvent.class);
+    }
 
 
 }

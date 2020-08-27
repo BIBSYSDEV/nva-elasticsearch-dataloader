@@ -14,7 +14,7 @@ public class ValueMapFlattenerTest {
     public static final String INDEX = "tulliball";
 
     @Test
-    @DisplayName("Testing flattender with Indexfiler")
+    @DisplayName("Testing flattener with Indexfiler")
     public void testValueMapFlattenerWithIndexFilterWithIndex() {
         Predicate<String> predicate = new IndexFilterBuilder().withIndex(INDEX).build();
         assertNotNull(predicate);

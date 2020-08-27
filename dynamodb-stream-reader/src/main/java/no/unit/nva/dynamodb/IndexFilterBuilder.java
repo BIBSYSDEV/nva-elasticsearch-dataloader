@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 public class IndexFilterBuilder {
 
     private boolean allowAll;
-    private Set<String> wantedIndexes;
+    private final Set<String> wantedIndexes = new HashSet<>();
 
     /**
      * Adds index to set of wanted indexes.
@@ -15,15 +15,12 @@ public class IndexFilterBuilder {
      * @return builder to use
      */
     public IndexFilterBuilder withIndex(String index) {
-        if (this.wantedIndexes == null) {
-            this.wantedIndexes = new HashSet<>();
-        }
-        this.wantedIndexes.add(index);
+        wantedIndexes.add(index);
         return this;  //By returning the builder each time, we can create a fluent interface.
     }
 
     /**
-     * Make this filer allow all indexnames.
+     * Make this filer allow all index names.
      * @return builder to make filter with
      */
     public IndexFilterBuilder doAllowAll() {
@@ -37,19 +34,9 @@ public class IndexFilterBuilder {
      */
     public Predicate<String> build() {
         if (allowAll) {
-            return new Predicate<String>() {
-                @Override
-                public boolean test(String t) {
-                    return true;
-                }
-            };
+            return t -> true;
         } else {
-            return new Predicate<String>() {
-                @Override
-                public boolean test(String index) {
-                    return wantedIndexes.contains(index);
-                }
-            };
+            return index -> wantedIndexes.contains(index);
         }
     }
 }
