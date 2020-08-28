@@ -16,10 +16,16 @@ public class DynamoDBEventTransformer {
 
 //    public static final String IDENTIFIER_KEY = "identifier";
     public static final String EMPTY_STRING = "";
+    public static final String DATE_YEAR = "entityDescription.date.year";
+    public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
+    public static final String CONTRIBUTORS_IDENTITY_NAME = "entityDescription.contributors.identity.name";
+    public static final String PUBLICATION_TYPE = "publicationInstance.type";
+    public static final String UNKNOWN_VALUE_KEY_MESSAGE = "Unknown valueKey: {}";
+
 
     private final String separator;
-//    private final Predicate<String> indexFilter;
-//    private final UnaryOperator<String> indexMapper;
+    private final Predicate<String> indexFilter;
+    private final UnaryOperator<String> indexMapper;
 
     public static class Builder {
 
@@ -44,16 +50,15 @@ public class DynamoDBEventTransformer {
         }
 
         public DynamoDBEventTransformer build() {
-            transformer = new DynamoDBEventTransformer(separator);
+            transformer = new DynamoDBEventTransformer(separator, indexFilter, indexMapping);
             return transformer;
         }
     }
 
-    private DynamoDBEventTransformer(String separator /* ,
-                                     Predicate<String> indexFilter /* , UnaryOperator<String> indexMapper */ ) {
+    private DynamoDBEventTransformer(String separator, Predicate<String> indexFilter, UnaryOperator<String> indexMapper ) {
         this.separator = separator;
-//        this.indexFilter = indexFilter;
-//        this.indexMapper = indexMapper;
+        this.indexFilter = indexFilter;
+        this.indexMapper = indexMapper;
     }
 
     /**
@@ -73,11 +78,11 @@ public class DynamoDBEventTransformer {
         valueMap.forEach((k, v) -> {
             if (v != null) {
                 String key = addIndexPrefix(prefix, k);
-                if (!isASimpleValue(v)) {
-//                    if (indexFilter.test(key)) {
-//                        target.put(indexMapper.apply(key), v.getS());
-//                    }
-//                } else {
+                if (isASimpleValue(v)) {
+                    if (indexFilter.test(key)) {
+                        assignValueToIndexDocument(document,indexMapper.apply(key), v.getS() );
+                    }
+                } else {
                     if (v.getL() == null) {
                         // This must be a map element
                         parse(document, key, v.getM());
@@ -86,11 +91,11 @@ public class DynamoDBEventTransformer {
                         List<AttributeValue> listElements = v.getL();
                         for (AttributeValue attributeValue : listElements) {
                             String elementKey = key; // + "-" + i;
-                            if (!isASimpleValue(attributeValue)) {
-//                                if (indexFilter.test(elementKey)) {
-//                                    target.put(indexMapper.apply(elementKey), attributeValue.getS());
-//                                }
-//                            } else {
+                            if (isASimpleValue(attributeValue)) {
+                                if (indexFilter.test(elementKey)) {
+                                    assignValueToIndexDocument(document,indexMapper.apply(key), v.getS() );
+                                }
+                            } else {
                                 parse(document, elementKey, attributeValue.getM());
                             }
                         }
@@ -100,6 +105,17 @@ public class DynamoDBEventTransformer {
         });
     }
 
+
+
+    private void assignValueToIndexDocument(ElasticSearchIndexDocument document, String valueKey, String value) {
+        switch (valueKey) {
+            case PUBLICATION_TYPE: document.setResourceType(value);break;
+            case CONTRIBUTORS_IDENTITY_NAME: document.addContributorName(value);break;
+            case DESCRIPTION_MAIN_TITLE: document.setTitle(value);break;
+            case DATE_YEAR: document.setDate(value);break;
+            default: logger.debug(UNKNOWN_VALUE_KEY_MESSAGE, valueKey); break;
+        }
+    }
 
     private boolean isASimpleValue(AttributeValue attributeValue) {
         return attributeValue.getM() == null && attributeValue.getL() == null;
