@@ -9,15 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import static no.unit.nva.dynamodb.DynamoDBStreamHandler.CONTRIBUTORS_IDENTITY_NAME;
+import static no.unit.nva.dynamodb.DynamoDBStreamHandler.DATE_YEAR;
+import static no.unit.nva.dynamodb.DynamoDBStreamHandler.DESCRIPTION_MAIN_TITLE;
+import static no.unit.nva.dynamodb.DynamoDBStreamHandler.PUBLICATION_TYPE;
+
 public class DynamoDBEventTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBEventTransformer.class);
 
     public static final String EMPTY_STRING = "";
-    public static final String DATE_YEAR = "entityDescription.date.year";
-    public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
-    public static final String CONTRIBUTORS_IDENTITY_NAME = "entityDescription.contributors.identity.name";
-    public static final String PUBLICATION_TYPE = "type";
     public static final String UNKNOWN_VALUE_KEY_MESSAGE = "Unknown valueKey: {}";
 
     private final String separator;
@@ -63,12 +64,11 @@ public class DynamoDBEventTransformer {
                                                     Map<String, AttributeValue> valueMap) {
         ElasticSearchIndexDocument document =
                 new ElasticSearchIndexDocument(elasticSearchIndexName, targetServiceUrl, identifier);
-        parse(document, "", valueMap);
+        parse(document, EMPTY_STRING, valueMap);
         return document;
     }
 
     private void parse(ElasticSearchIndexDocument document, String prefix, Map<String, AttributeValue> valueMap) {
-        logger.trace("flatten: prefix={} values={}", prefix, valueMap);
         valueMap.forEach((k, v) -> {
             if (v != null) {
                 String key = addIndexPrefix(prefix, k);

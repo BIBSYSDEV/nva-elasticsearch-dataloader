@@ -28,7 +28,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String DATE_YEAR = "entityDescription.date.year";
     public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
     public static final String CONTRIBUTORS_IDENTITY_NAME = "entityDescription.contributors.identity.name";
-    public static final String PUBLICATION_TYPE = "publicationInstance.type";
+    public static final String PUBLICATION_TYPE = "type";
     public static final String YEAR = "year";
     public static final String TITLE = "title";
     public static final String NAME = "author";
