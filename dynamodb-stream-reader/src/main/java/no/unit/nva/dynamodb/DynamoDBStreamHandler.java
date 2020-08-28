@@ -107,7 +107,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
         DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer.Builder()
                 .withIndexFilter(indexFilter)
-                .withSeparator(".")
                 .build();
 
         ElasticSearchIndexDocument document = eventTransformer.parseValueMap(

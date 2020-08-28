@@ -18,22 +18,16 @@ public class DynamoDBEventTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBEventTransformer.class);
 
+    public static final String SIMPLE_DOT_SEPARATOR = ".";
     public static final String EMPTY_STRING = "";
     public static final String UNKNOWN_VALUE_KEY_MESSAGE = "Unknown valueKey: {}";
 
-    private final String separator;
     private final Predicate<String> indexFilter;
 
     public static class Builder {
 
         private DynamoDBEventTransformer transformer;
-        private String separator = EMPTY_STRING;
         private Predicate<String> indexFilter = new IndexFilterBuilder().doAllowAll().build();
-
-        public Builder withSeparator(String separator) {
-            this.separator = separator;
-            return this;
-        }
 
         public Builder withIndexFilter(Predicate<String> filter) {
             this.indexFilter = filter;
@@ -41,14 +35,12 @@ public class DynamoDBEventTransformer {
         }
 
         public DynamoDBEventTransformer build() {
-            transformer = new DynamoDBEventTransformer(separator, indexFilter);
+            transformer = new DynamoDBEventTransformer(indexFilter);
             return transformer;
         }
     }
 
-    private DynamoDBEventTransformer(String separator,
-                                     Predicate<String> indexFilter) {
-        this.separator = separator;
+    private DynamoDBEventTransformer(Predicate<String> indexFilter) {
         this.indexFilter = indexFilter;
     }
 
@@ -84,13 +76,12 @@ public class DynamoDBEventTransformer {
                         // This must be a list/JSON-array
                         List<AttributeValue> listElements = v.getL();
                         for (AttributeValue attributeValue : listElements) {
-                            String elementKey = key; // + "-" + i;
                             if (isASimpleValue(attributeValue)) {
-                                if (indexFilter.test(elementKey)) {
+                                if (indexFilter.test(key)) {
                                     assignValueToIndexDocument(document, key, v.getS());
                                 }
                             } else {
-                                parse(document, elementKey, attributeValue.getM());
+                                parse(document, key, attributeValue.getM());
                             }
                         }
                     }
@@ -125,7 +116,7 @@ public class DynamoDBEventTransformer {
 
     private String addIndexPrefix(String prefix, String k) {
         if (prefix != null && !prefix.isEmpty()) {
-            return prefix + separator + k;
+            return prefix + SIMPLE_DOT_SEPARATOR + k;
         } else {
             return k;
         }
