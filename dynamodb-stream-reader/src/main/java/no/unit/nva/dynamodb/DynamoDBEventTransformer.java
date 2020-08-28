@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 public class DynamoDBEventTransformer {
 
@@ -21,17 +20,14 @@ public class DynamoDBEventTransformer {
     public static final String PUBLICATION_TYPE = "publicationInstance.type";
     public static final String UNKNOWN_VALUE_KEY_MESSAGE = "Unknown valueKey: {}";
 
-
     private final String separator;
     private final Predicate<String> indexFilter;
-    private final UnaryOperator<String> indexMapper;
 
     public static class Builder {
 
         private DynamoDBEventTransformer transformer;
         private String separator = EMPTY_STRING;
         private Predicate<String> indexFilter = new IndexFilterBuilder().doAllowAll().build();
-        private UnaryOperator<String> indexMapping;
 
         public Builder withSeparator(String separator) {
             this.separator = separator;
@@ -43,23 +39,16 @@ public class DynamoDBEventTransformer {
             return this;
         }
 
-        public Builder withIndexMapping(UnaryOperator<String> mapping) {
-            this.indexMapping = mapping;
-            return this;
-        }
-
         public DynamoDBEventTransformer build() {
-            transformer = new DynamoDBEventTransformer(separator, indexFilter, indexMapping);
+            transformer = new DynamoDBEventTransformer(separator, indexFilter);
             return transformer;
         }
     }
 
     private DynamoDBEventTransformer(String separator,
-                                     Predicate<String> indexFilter,
-                                     UnaryOperator<String> indexMapper) {
+                                     Predicate<String> indexFilter) {
         this.separator = separator;
         this.indexFilter = indexFilter;
-        this.indexMapper = indexMapper;
     }
 
     /**
@@ -85,7 +74,7 @@ public class DynamoDBEventTransformer {
                 String key = addIndexPrefix(prefix, k);
                 if (isASimpleValue(v)) {
                     if (indexFilter.test(key)) {
-                        assignValueToIndexDocument(document,indexMapper.apply(key), v.getS());
+                        assignValueToIndexDocument(document,key, v.getS());
                     }
                 } else {
                     if (v.getL() == null) {
@@ -98,7 +87,7 @@ public class DynamoDBEventTransformer {
                             String elementKey = key; // + "-" + i;
                             if (isASimpleValue(attributeValue)) {
                                 if (indexFilter.test(elementKey)) {
-                                    assignValueToIndexDocument(document,indexMapper.apply(key), v.getS());
+                                    assignValueToIndexDocument(document, key, v.getS());
                                 }
                             } else {
                                 parse(document, elementKey, attributeValue.getM());

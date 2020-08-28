@@ -16,7 +16,6 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
@@ -109,16 +108,9 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .withIndex(PUBLICATION_TYPE)
                 .build();
 
-        UnaryOperator<String> indexMapping = new IndexMapperBuilder()
-                .withIndex(DATE_YEAR, YEAR)
-                .withIndex(DESCRIPTION_MAIN_TITLE, TITLE)
-                .withIndex(CONTRIBUTORS_IDENTITY_NAME, NAME)
-                .withIndex(PUBLICATION_TYPE, TYPE)
-                .build();
 
         DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer.Builder()
                 .withIndexFilter(indexFilter)
-                .withIndexMapping(indexMapping)
                 .withSeparator(".")
                 .build();
 

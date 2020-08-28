@@ -72,6 +72,14 @@ public class DynamoDBStreamHandlerTest {
     }
 
     @Test
+    @DisplayName("testCreateHandlerWithEmptyEnvironmentShouldFail")
+    public void testCreateHandlerWithEmptyEnvironmentShouldFail()  {
+        assertThrows(IllegalStateException.class, () -> new DynamoDBStreamHandler());
+    }
+
+
+
+    @Test
     @DisplayName("testHandlerHandleSimpleModifyEventWithoutProblem")
     public void testHandlerHandleSimpleModifyEventWithoutProblem() throws IOException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
