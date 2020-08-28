@@ -77,6 +77,7 @@ Resources:
           ELASTICSEARCH_ENDPOINT_ADDRESS: !ImportValue NVAElasticSearchDomainEndpoint
           ELASTICSEARCH_ENDPOINT_INDEX: resources
           ELASTICSEARCH_ENDPOINT_API_SCHEME: https
+          TARGET_SERVICE_URL: https://api.dev.nva.aws.unit.no/publication/
 
   TriggerLambdaMapping:
     Type: AWS::Lambda::EventSourceMapping

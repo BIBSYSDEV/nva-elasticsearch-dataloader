@@ -23,6 +23,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
     public static final String ELASTICSEARCH_ENDPOINT_INDEX_KEY = "ELASTICSEARCH_ENDPOINT_INDEX";
+    public static final String TARGET_SERVICE_URL_KEY = "TARGET_SERVICE_URL";
 
     public static final String IDENTIFIER = "identifier";
     public static final String DATE_YEAR = "entityDescription.date.year";
@@ -35,7 +36,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String TYPE = "publicationType";
     public static final String ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE = "Error processing DynamoDBEvent";
     public static final String SUCCESS_MESSAGE = "200 OK";
-    public static final String TARGET_SERVICE_URL_KEY = "TARGET_SERVICE_URL_KEY";
     private final ElasticSearchRestClient elasticSearchClient;
     private String targetServiceUrl;
     private String elasticSearchEndpointIndex;
