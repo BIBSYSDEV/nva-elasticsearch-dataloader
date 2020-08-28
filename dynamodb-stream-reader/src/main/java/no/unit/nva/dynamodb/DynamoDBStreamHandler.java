@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
+import elasticsearch.ElasticSearchIndexDocument;
 import elasticsearch.ElasticSearchRestClient;
 import nva.commons.utils.Environment;
 import nva.commons.utils.JacocoGenerated;
@@ -21,6 +22,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
+    public static final String ELASTICSEARCH_ENDPOINT_INDEX_KEY = "ELASTICSEARCH_ENDPOINT_INDEX";
+
     public static final String IDENTIFIER = "identifier";
     public static final String DATE_YEAR = "entityDescription.date.year";
     public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
@@ -32,15 +35,28 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String TYPE = "publicationType";
     public static final String ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE = "Error processing DynamoDBEvent";
     public static final String SUCCESS_MESSAGE = "200 OK";
+    public static final String TARGET_SERVICE_URL_KEY = "TARGET_SERVICE_URL_KEY";
     private final ElasticSearchRestClient elasticSearchClient;
+    private String targetServiceUrl;
+    private String elasticSearchEndpointIndex;
 
     /**
      * Default constructor for DynamoDBStreamHandler.
      */
     @JacocoGenerated
     public DynamoDBStreamHandler() {
-        this(new ElasticSearchRestClient(HttpClient.newHttpClient(), new Environment()));
+        this(new Environment());
     }
+
+    /**
+     *  constructor for DynamoDBStreamHandler.
+     */
+    @JacocoGenerated
+    public DynamoDBStreamHandler(Environment environment) {
+        this(new ElasticSearchRestClient(HttpClient.newHttpClient(), environment), environment);
+    }
+
+
 
     /**
      * Constructor for DynamoDBStreamHandler for testing.
@@ -48,8 +64,11 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
      * @param elasticSearchRestClient elasticSearchRestClient to be injected for testing
      */
     @JacocoGenerated
-    public DynamoDBStreamHandler(ElasticSearchRestClient elasticSearchRestClient) {
+    public DynamoDBStreamHandler(ElasticSearchRestClient elasticSearchRestClient, Environment environment) {
         this.elasticSearchClient = elasticSearchRestClient;
+        targetServiceUrl = environment.readEnv(TARGET_SERVICE_URL_KEY);
+        elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+
     }
 
 
@@ -79,11 +98,11 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
             throws InterruptedException, IOException, URISyntaxException {
-
         String identifier = getIdentifierFromStreamRecord(streamRecord);
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
+        logger.trace("valueMap={}", valueMap.toString());
 
-        Predicate<String> indexFilter = new IndexFilterBuilder()
+        Predicate<String> indexfilter = new IndexFilterBuilder()
                 .withIndex(DATE_YEAR)
                 .withIndex(DESCRIPTION_MAIN_TITLE)
                 .withIndex(CONTRIBUTORS_IDENTITY_NAME)
@@ -97,14 +116,14 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .withIndex(PUBLICATION_TYPE, TYPE)
                 .build();
 
-        ValueMapFlattener flattener = new ValueMapFlattener.Builder()
-                .withIndexFilter(indexFilter)
+        DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer.Builder()
+                .withIndexFilter(indexfilter)
                 .withIndexMapping(indexMapping)
                 .withSeparator(".")
                 .build();
 
-        Map<String, String> flattenedPublication = flattener.flattenValueMap(identifier, valueMap);
-        elasticSearchClient.addDocumentToIndex(flattenedPublication);
+        ElasticSearchIndexDocument document = eventTransformer.parseValueMap(elasticSearchEndpointIndex, targetServiceUrl, identifier, valueMap);
+        elasticSearchClient.addDocumentToIndex(document);
 
     }
 

@@ -19,7 +19,7 @@ public class ValueMapFlattenerTest {
         Predicate<String> predicate = new IndexFilterBuilder().withIndex(INDEX).build();
         assertNotNull(predicate);
         assertTrue(predicate.test(INDEX));
-        ValueMapFlattener flattener = new ValueMapFlattener.Builder().withIndexFilter(predicate).build();
+        DynamoDBEventTransformer flattener = new DynamoDBEventTransformer.Builder().withIndexFilter(predicate).build();
         assertNotNull(flattener);
 
     }

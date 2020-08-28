@@ -2,7 +2,6 @@ package elasticsearch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import nva.commons.utils.Environment;
-import nva.commons.utils.JsonUtils;
 import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +12,8 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Map;
 
-import static no.unit.nva.dynamodb.ValueMapFlattener.IDENTIFIER_KEY;
+import static no.unit.nva.dynamodb.DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY;
 
 public class ElasticSearchRestClient {
 
@@ -27,7 +25,6 @@ public class ElasticSearchRestClient {
 
     public static final String UPSERTING_LOG_MESSAGE = "Upserting search index  with values {}";
     public static final String DELETE_LOG_MESSAGE = "Deleting from search API publication with identifier: {}";
-    public static final String ELASTICSEARCH_ENDPOINT_INDEX_KEY = "ELASTICSEARCH_ENDPOINT_INDEX";
     public static final String ELASTICSEARCH_ENDPOINT_ADDRESS_KEY = "ELASTICSEARCH_ENDPOINT_ADDRESS";
     public static final String ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY = "ELASTICSEARCH_ENDPOINT_API_SCHEME";
     public static final String ELASTICSEARCH_ENDPOINT_URI_TEMPLATE = "%s://%s/%s/%s/%s";
@@ -74,7 +71,7 @@ public class ElasticSearchRestClient {
      * @throws IOException thrown hen service i not available
      * @throws InterruptedException thrown when service i interrupted
      */
-    public void addDocumentToIndex(Map<String, String> document)
+    public void addDocumentToIndex(ElasticSearchIndexDocument document)
             throws URISyntaxException, IOException, InterruptedException {
         logger.debug(UPSERTING_LOG_MESSAGE, document);
 
@@ -84,10 +81,10 @@ public class ElasticSearchRestClient {
         logger.debug(response.body());
     }
 
-    private HttpRequest createHttpRequest(Map<String, String> document) throws
+    private HttpRequest createHttpRequest(ElasticSearchIndexDocument document) throws
             JsonProcessingException, URISyntaxException {
-        String requestBody = JsonUtils.objectMapper.writeValueAsString(document);
-        String identifier = document.get(IDENTIFIER_KEY);
+        String requestBody = document.toJson();
+        String identifier = document.getInternalIdentifier();
 
         HttpRequest request = buildHttpRequest(requestBody, identifier);
 
