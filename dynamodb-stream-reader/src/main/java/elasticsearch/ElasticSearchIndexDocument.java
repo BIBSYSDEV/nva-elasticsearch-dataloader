@@ -39,6 +39,7 @@ public class ElasticSearchIndexDocument {
         this.serviceUrl = serviceUrl;
         this.internalIdentifier = internalIdentifier;
         values.put(ID_KEY, serviceUrl + internalIdentifier);
+        values.put(CONTRIBUTORS_KEY, new ArrayList<Object>());
     }
 
     public String getServiceUrl() {
@@ -59,13 +60,10 @@ public class ElasticSearchIndexDocument {
      * @param name name of the contributor
      */
     public void addContributorName(String name) {
-        List<Object> contributors =
-                (List<Object>) values.computeIfAbsent(CONTRIBUTORS_KEY, l ->  new ArrayList<Object>());
-
+        List<Object> contributors = (List<Object>) values.get(CONTRIBUTORS_KEY);
         Map<String, String> contributorMap = new HashMap<>();
         contributorMap.put(NAME_KEY,name);
         contributors.add(contributorMap);
-        values.put(CONTRIBUTORS_KEY,contributors);
     }
 
     /**
