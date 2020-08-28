@@ -23,7 +23,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unchecked")
 public class DynamoDBStreamHandlerTest {
@@ -32,6 +31,10 @@ public class DynamoDBStreamHandlerTest {
     private static final String SAMPLE_INSERT_EVENT_FILENAME = "DynamoDBStreamInsertEvent.json";
     private static final String SAMPLE_REMOVE_EVENT_FILENAME = "DynamoDBStreamRemoveEvent.json";
     private static final String SAMPLE_UNKNOWN_EVENT_FILENAME = "UnknownDynamoDBEvent.json";
+    public static final String ELASTICSEARCH_ENDPOINT_ADDRESS = "localhost";
+    private static final String ELASTICSEARCH_ENDPOINT_INDEX = "resources";
+    private static final String ELASTICSEARCH_ENDPOINT_API_SCHEME = "http";
+    private static final Object TARGET_SERVICE_URL = "http://localhost/service/";
 
     private DynamoDBStreamHandler handler;
     private ElasticSearchRestClient elasticSearchRestClient;
@@ -50,9 +53,18 @@ public class DynamoDBStreamHandlerTest {
         environment = spy(Environment.class);
         context = mock(Context.class);
         httpClient = spy(HttpClient.class);
-        when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY)).thenReturn("localhost");
-        when(environment.readEnv(DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY)).thenReturn("resources");
-        when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY)).thenReturn("http");
+        doReturn(ELASTICSEARCH_ENDPOINT_ADDRESS).when(environment)
+                .readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
+        doReturn(ELASTICSEARCH_ENDPOINT_INDEX).when(environment)
+                .readEnv(DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+        doReturn(ELASTICSEARCH_ENDPOINT_API_SCHEME).when(environment)
+                .readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
+
+        doReturn(TARGET_SERVICE_URL).when(environment)
+                .readEnv(DynamoDBStreamHandler.TARGET_SERVICE_URL_KEY);
+        doReturn(ELASTICSEARCH_ENDPOINT_INDEX).when(environment)
+                .readEnv(DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+
         HttpResponse<String> successResponse = mock(HttpResponse.class);
         doReturn(successResponse).when(httpClient).send(any(), any());
         elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);

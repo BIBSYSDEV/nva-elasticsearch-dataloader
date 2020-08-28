@@ -45,20 +45,8 @@ public class ElasticSearchRestClient {
     public ElasticSearchRestClient(HttpClient httpClient, Environment environment) {
         client = httpClient;
         elasticSearchEndpointAddress = environment.readEnv(ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
-        if (elasticSearchEndpointAddress == null) {
-            throw new IllegalArgumentException(
-                    String.format(MISSING_IN_ENVIRONMENT_ERROR, "elasticSearchEndpointAddress"));
-        }
         elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
-        if (elasticSearchEndpointIndex == null) {
-            throw new IllegalArgumentException(
-                    String.format(MISSING_IN_ENVIRONMENT_ERROR, "elasticSearchEndpointIndex"));
-        }
         elasticSearchEndpointScheme = environment.readEnv(ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
-        if (elasticSearchEndpointScheme == null) {
-            throw new IllegalArgumentException(
-                    String.format(MISSING_IN_ENVIRONMENT_ERROR, "elasticSearchEndpointScheme"));
-        }
 
         logger.info(INITIAL_LOG_MESSAGE,
                 elasticSearchEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex);

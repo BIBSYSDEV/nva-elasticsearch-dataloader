@@ -14,7 +14,6 @@ public class DynamoDBEventTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBEventTransformer.class);
 
-//    public static final String IDENTIFIER_KEY = "identifier";
     public static final String EMPTY_STRING = "";
     public static final String DATE_YEAR = "entityDescription.date.year";
     public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
@@ -55,7 +54,9 @@ public class DynamoDBEventTransformer {
         }
     }
 
-    private DynamoDBEventTransformer(String separator, Predicate<String> indexFilter, UnaryOperator<String> indexMapper ) {
+    private DynamoDBEventTransformer(String separator,
+                                     Predicate<String> indexFilter,
+                                     UnaryOperator<String> indexMapper) {
         this.separator = separator;
         this.indexFilter = indexFilter;
         this.indexMapper = indexMapper;
@@ -67,8 +68,12 @@ public class DynamoDBEventTransformer {
      * @param valueMap Map containing the values associated with the record
      * @return A document usable for indexing in elasticsearch
      */
-    public ElasticSearchIndexDocument parseValueMap(String elasticSearchIndexName, String targetServiceUrl, String identifier, Map<String, AttributeValue> valueMap) {
-        ElasticSearchIndexDocument document = new ElasticSearchIndexDocument(elasticSearchIndexName, targetServiceUrl, identifier);
+    public ElasticSearchIndexDocument parseValueMap(String elasticSearchIndexName,
+                                                    String targetServiceUrl,
+                                                    String identifier,
+                                                    Map<String, AttributeValue> valueMap) {
+        ElasticSearchIndexDocument document =
+                new ElasticSearchIndexDocument(elasticSearchIndexName, targetServiceUrl, identifier);
         parse(document, "", valueMap);
         return document;
     }
@@ -80,7 +85,7 @@ public class DynamoDBEventTransformer {
                 String key = addIndexPrefix(prefix, k);
                 if (isASimpleValue(v)) {
                     if (indexFilter.test(key)) {
-                        assignValueToIndexDocument(document,indexMapper.apply(key), v.getS() );
+                        assignValueToIndexDocument(document,indexMapper.apply(key), v.getS());
                     }
                 } else {
                     if (v.getL() == null) {
@@ -93,7 +98,7 @@ public class DynamoDBEventTransformer {
                             String elementKey = key; // + "-" + i;
                             if (isASimpleValue(attributeValue)) {
                                 if (indexFilter.test(elementKey)) {
-                                    assignValueToIndexDocument(document,indexMapper.apply(key), v.getS() );
+                                    assignValueToIndexDocument(document,indexMapper.apply(key), v.getS());
                                 }
                             } else {
                                 parse(document, elementKey, attributeValue.getM());
@@ -109,11 +114,21 @@ public class DynamoDBEventTransformer {
 
     private void assignValueToIndexDocument(ElasticSearchIndexDocument document, String valueKey, String value) {
         switch (valueKey) {
-            case PUBLICATION_TYPE: document.setResourceType(value);break;
-            case CONTRIBUTORS_IDENTITY_NAME: document.addContributorName(value);break;
-            case DESCRIPTION_MAIN_TITLE: document.setTitle(value);break;
-            case DATE_YEAR: document.setDate(value);break;
-            default: logger.debug(UNKNOWN_VALUE_KEY_MESSAGE, valueKey); break;
+            case PUBLICATION_TYPE:
+                document.setResourceType(value);
+                break;
+            case CONTRIBUTORS_IDENTITY_NAME:
+                document.addContributorName(value);
+                break;
+            case DESCRIPTION_MAIN_TITLE:
+                document.setTitle(value);
+                break;
+            case DATE_YEAR:
+                document.setDate(value);
+                break;
+            default:
+                logger.debug(UNKNOWN_VALUE_KEY_MESSAGE, valueKey);
+                break;
         }
     }
 

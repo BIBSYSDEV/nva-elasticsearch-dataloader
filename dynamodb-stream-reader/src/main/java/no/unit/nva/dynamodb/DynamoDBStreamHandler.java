@@ -102,7 +102,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
         logger.trace("valueMap={}", valueMap.toString());
 
-        Predicate<String> indexfilter = new IndexFilterBuilder()
+        Predicate<String> indexFilter = new IndexFilterBuilder()
                 .withIndex(DATE_YEAR)
                 .withIndex(DESCRIPTION_MAIN_TITLE)
                 .withIndex(CONTRIBUTORS_IDENTITY_NAME)
@@ -117,12 +117,16 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .build();
 
         DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer.Builder()
-                .withIndexFilter(indexfilter)
+                .withIndexFilter(indexFilter)
                 .withIndexMapping(indexMapping)
                 .withSeparator(".")
                 .build();
 
-        ElasticSearchIndexDocument document = eventTransformer.parseValueMap(elasticSearchEndpointIndex, targetServiceUrl, identifier, valueMap);
+        ElasticSearchIndexDocument document = eventTransformer.parseValueMap(
+                elasticSearchEndpointIndex,
+                targetServiceUrl,
+                identifier,
+                valueMap);
         elasticSearchClient.addDocumentToIndex(document);
 
     }

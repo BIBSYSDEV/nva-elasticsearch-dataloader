@@ -11,6 +11,7 @@ import java.net.http.HttpClient;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 public class ElasticSearchRestClientTest {
@@ -31,8 +32,8 @@ public class ElasticSearchRestClientTest {
     @DisplayName("testConstructorWithParameterMissingEnvironmentVariablesShouldFail")
     public void testConstructorWithParameterMissingEnvironmentVariablesShouldFail() {
         HttpClient httpClient = mock(HttpClient.class);
-        Environment environment = mock(Environment.class);
-        assertThrows(IllegalArgumentException.class, () -> new ElasticSearchRestClient(httpClient, environment));
+        Environment environment = spy(Environment.class);
+        assertThrows(IllegalStateException.class, () -> new ElasticSearchRestClient(httpClient, environment));
     }
 
 
