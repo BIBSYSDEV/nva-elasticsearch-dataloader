@@ -51,12 +51,12 @@ public class DynamoDBStreamHandlerTest {
         context = mock(Context.class);
         httpClient = spy(HttpClient.class);
         when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY)).thenReturn("localhost");
-        when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_INDEX_KEY)).thenReturn("resources");
+        when(environment.readEnv(DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY)).thenReturn("resources");
         when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY)).thenReturn("http");
         HttpResponse<String> successResponse = mock(HttpResponse.class);
         doReturn(successResponse).when(httpClient).send(any(), any());
         elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);
-        handler = new DynamoDBStreamHandler(elasticSearchRestClient);
+        handler = new DynamoDBStreamHandler(elasticSearchRestClient, environment);
     }
 
     @Test

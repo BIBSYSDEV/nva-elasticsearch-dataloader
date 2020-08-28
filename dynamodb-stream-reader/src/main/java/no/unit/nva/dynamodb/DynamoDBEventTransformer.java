@@ -1,29 +1,30 @@
 package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
+import elasticsearch.ElasticSearchIndexDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
-public class ValueMapFlattener {
+public class DynamoDBEventTransformer {
 
-    private static final Logger logger = LoggerFactory.getLogger(ValueMapFlattener.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamoDBEventTransformer.class);
 
-    public static final String IDENTIFIER_KEY = "identifier";
+//    public static final String IDENTIFIER_KEY = "identifier";
+    public static final String EMPTY_STRING = "";
 
     private final String separator;
-    private final Predicate<String> indexFilter;
-    private final UnaryOperator<String> indexMapper;
+//    private final Predicate<String> indexFilter;
+//    private final UnaryOperator<String> indexMapper;
 
     public static class Builder {
 
-        private ValueMapFlattener valueMapFlattener;
-        private String separator = "";
+        private DynamoDBEventTransformer transformer;
+        private String separator = EMPTY_STRING;
         private Predicate<String> indexFilter = new IndexFilterBuilder().doAllowAll().build();
         private UnaryOperator<String> indexMapping;
 
@@ -42,56 +43,55 @@ public class ValueMapFlattener {
             return this;
         }
 
-        public ValueMapFlattener build() {
-            valueMapFlattener = new ValueMapFlattener(separator, indexFilter, indexMapping);
-            return valueMapFlattener;
+        public DynamoDBEventTransformer build() {
+            transformer = new DynamoDBEventTransformer(separator);
+            return transformer;
         }
     }
 
-    private ValueMapFlattener(String separator, Predicate<String> indexFilter, UnaryOperator<String> indexMapper) {
+    private DynamoDBEventTransformer(String separator /* ,
+                                     Predicate<String> indexFilter /* , UnaryOperator<String> indexMapper */ ) {
         this.separator = separator;
-        this.indexFilter = indexFilter;
-        this.indexMapper = indexMapper;
+//        this.indexFilter = indexFilter;
+//        this.indexMapper = indexMapper;
     }
 
     /**
-     * Flattens a nested valuemap read from DynamoDB streamrecord.
+     * Transforms a nested valuemap read from DynamoDB streamrecord into ElasticSearchIndexDocument.
      * @param identifier of the original dynamoDB record
      * @param valueMap Map containing the values associated with the record
      * @return A document usable for indexing in elasticsearch
      */
-    public Map<String, String> flattenValueMap(String identifier, Map<String, AttributeValue> valueMap) {
-        Map<String, String> flattenedPublication = new HashMap<>();
-        flattenedPublication.put(IDENTIFIER_KEY, identifier);
-
-        flatten(flattenedPublication, "", valueMap);
-        return flattenedPublication;
+    public ElasticSearchIndexDocument parseValueMap(String elasticSearchIndexName, String targetServiceUrl, String identifier, Map<String, AttributeValue> valueMap) {
+        ElasticSearchIndexDocument document = new ElasticSearchIndexDocument(elasticSearchIndexName, targetServiceUrl, identifier);
+        parse(document, "", valueMap);
+        return document;
     }
 
-    private void flatten(Map<String, String> target, String prefix, Map<String, AttributeValue> valueMap) {
+    private void parse(ElasticSearchIndexDocument document, String prefix, Map<String, AttributeValue> valueMap) {
         logger.trace("flatten: prefix={} values={}", prefix, valueMap);
         valueMap.forEach((k, v) -> {
             if (v != null) {
                 String key = addIndexPrefix(prefix, k);
-                if (isASimpleValue(v)) {
-                    if (indexFilter.test(key)) {
-                        target.put(indexMapper.apply(key), v.getS());
-                    }
-                } else {
+                if (!isASimpleValue(v)) {
+//                    if (indexFilter.test(key)) {
+//                        target.put(indexMapper.apply(key), v.getS());
+//                    }
+//                } else {
                     if (v.getL() == null) {
                         // This must be a map element
-                        flatten(target, key, v.getM());
+                        parse(document, key, v.getM());
                     } else {
                         // This must be a list/JSON-array
                         List<AttributeValue> listElements = v.getL();
                         for (AttributeValue attributeValue : listElements) {
                             String elementKey = key; // + "-" + i;
-                            if (isASimpleValue(attributeValue)) {
-                                if (indexFilter.test(elementKey)) {
-                                    target.put(indexMapper.apply(elementKey), attributeValue.getS());
-                                }
-                            } else {
-                                flatten(target, elementKey, attributeValue.getM());
+                            if (!isASimpleValue(attributeValue)) {
+//                                if (indexFilter.test(elementKey)) {
+//                                    target.put(indexMapper.apply(elementKey), attributeValue.getS());
+//                                }
+//                            } else {
+                                parse(document, elementKey, attributeValue.getM());
                             }
                         }
                     }
