@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.util.Map;
-import java.util.function.Predicate;
 
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
@@ -98,16 +97,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
         logger.trace("valueMap={}", valueMap.toString());
 
-        Predicate<String> indexFilter = new IndexFilterBuilder()
-                .withIndex(DATE_YEAR)
-                .withIndex(DESCRIPTION_MAIN_TITLE)
-                .withIndex(CONTRIBUTORS_IDENTITY_NAME)
-                .withIndex(PUBLICATION_TYPE)
-                .build();
-
-        DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer.Builder()
-                .withIndexFilter(indexFilter)
-                .build();
+        DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer();
 
         ElasticSearchIndexDocument document = eventTransformer.parseValueMap(
                 elasticSearchEndpointIndex,

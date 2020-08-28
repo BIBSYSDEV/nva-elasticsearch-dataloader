@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.Set;
 
 import static no.unit.nva.dynamodb.DynamoDBStreamHandler.CONTRIBUTORS_IDENTITY_NAME;
 import static no.unit.nva.dynamodb.DynamoDBStreamHandler.DATE_YEAR;
@@ -22,26 +22,15 @@ public class DynamoDBEventTransformer {
     public static final String EMPTY_STRING = "";
     public static final String UNKNOWN_VALUE_KEY_MESSAGE = "Unknown valueKey: {}";
 
-    private final Predicate<String> indexFilter;
+    private final Set<String> wantedIndexes = Set.of(DATE_YEAR,
+            DESCRIPTION_MAIN_TITLE,
+            CONTRIBUTORS_IDENTITY_NAME,
+            PUBLICATION_TYPE);
 
-    public static class Builder {
-
-        private DynamoDBEventTransformer transformer;
-        private Predicate<String> indexFilter = new IndexFilterBuilder().doAllowAll().build();
-
-        public Builder withIndexFilter(Predicate<String> filter) {
-            this.indexFilter = filter;
-            return this;
-        }
-
-        public DynamoDBEventTransformer build() {
-            transformer = new DynamoDBEventTransformer(indexFilter);
-            return transformer;
-        }
-    }
-
-    private DynamoDBEventTransformer(Predicate<String> indexFilter) {
-        this.indexFilter = indexFilter;
+    /**
+     * Creates a DynamoDBEventTransformer which creates a ElasticSearchIndexDocument from an dynamoDBEvent.
+     */
+    public DynamoDBEventTransformer() {
     }
 
     /**
@@ -65,7 +54,7 @@ public class DynamoDBEventTransformer {
             if (v != null) {
                 String key = addIndexPrefix(prefix, k);
                 if (isASimpleValue(v)) {
-                    if (indexFilter.test(key)) {
+                    if (wantedIndexes.contains(key)) {
                         assignValueToIndexDocument(document,key, v.getS());
                     }
                 } else {
@@ -77,7 +66,7 @@ public class DynamoDBEventTransformer {
                         List<AttributeValue> listElements = v.getL();
                         for (AttributeValue attributeValue : listElements) {
                             if (isASimpleValue(attributeValue)) {
-                                if (indexFilter.test(key)) {
+                                if (wantedIndexes.contains(key)) {
                                     assignValueToIndexDocument(document, key, v.getS());
                                 }
                             } else {
