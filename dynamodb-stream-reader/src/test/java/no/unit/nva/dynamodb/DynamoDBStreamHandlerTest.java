@@ -47,7 +47,7 @@ public class DynamoDBStreamHandlerTest {
      */
     @BeforeEach
     public void init() throws IOException, InterruptedException {
-        environment = mock(Environment.class);
+        environment = spy(Environment.class);
         context = mock(Context.class);
         httpClient = spy(HttpClient.class);
         when(environment.readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY)).thenReturn("localhost");
