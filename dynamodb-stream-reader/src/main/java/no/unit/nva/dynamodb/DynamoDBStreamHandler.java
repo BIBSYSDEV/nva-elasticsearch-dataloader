@@ -67,9 +67,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
         this.elasticSearchClient = elasticSearchRestClient;
         targetServiceUrl = environment.readEnv(TARGET_SERVICE_URL_KEY);
         elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
-
     }
-
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
@@ -91,7 +89,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
             logger.error(ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE, e);
             throw new RuntimeException(e);
         }
-
         return SUCCESS_MESSAGE;
     }
 
@@ -108,7 +105,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 .withIndex(PUBLICATION_TYPE)
                 .build();
 
-
         DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer.Builder()
                 .withIndexFilter(indexFilter)
                 .withSeparator(".")
@@ -120,7 +116,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
                 identifier,
                 valueMap);
         elasticSearchClient.addDocumentToIndex(document);
-
     }
 
     private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)

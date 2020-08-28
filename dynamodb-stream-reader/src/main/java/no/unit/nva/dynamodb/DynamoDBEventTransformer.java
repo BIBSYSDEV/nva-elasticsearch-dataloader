@@ -99,8 +99,6 @@ public class DynamoDBEventTransformer {
         });
     }
 
-
-
     private void assignValueToIndexDocument(ElasticSearchIndexDocument document, String valueKey, String value) {
         switch (valueKey) {
             case PUBLICATION_TYPE:
