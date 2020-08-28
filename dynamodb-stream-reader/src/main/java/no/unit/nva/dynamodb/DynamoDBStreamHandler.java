@@ -28,10 +28,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
     public static final String CONTRIBUTORS_IDENTITY_NAME = "entityDescription.contributors.identity.name";
     public static final String PUBLICATION_TYPE = "type";
-    public static final String YEAR = "year";
-    public static final String TITLE = "title";
-    public static final String NAME = "author";
-    public static final String TYPE = "publicationType";
     public static final String ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE = "Error processing DynamoDBEvent";
     public static final String SUCCESS_MESSAGE = "200 OK";
     private final ElasticSearchRestClient elasticSearchClient;
