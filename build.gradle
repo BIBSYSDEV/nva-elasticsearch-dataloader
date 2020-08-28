@@ -15,7 +15,7 @@ plugins {
 group 'no.unit.nva'
 version '1.0-SNAPSHOT'
 
-allprojects {
+subprojects {
     apply plugin: 'nebula.lint'
     apply plugin: 'java-library'
     apply plugin: 'jacoco'
@@ -39,7 +39,6 @@ allprojects {
     def awsSdkVersion = '1.11.839'
 
     dependencies {
-        implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: '0.3.8'
         implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jacksonVersion
         implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
         implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
