@@ -8,6 +8,7 @@ import elasticsearch.ElasticSearchIndexDocument;
 import elasticsearch.ElasticSearchRestClient;
 import nva.commons.utils.Environment;
 import nva.commons.utils.JacocoGenerated;
+import nva.commons.utils.attempt.Failure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.util.Map;
+
+import static nva.commons.utils.attempt.Try.attempt;
 
 public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, String> {
 
@@ -31,8 +34,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE = "Error processing DynamoDBEvent";
     public static final String SUCCESS_MESSAGE = "200 OK";
     private final ElasticSearchRestClient elasticSearchClient;
-    private String targetServiceUrl;
-    private String elasticSearchEndpointIndex;
+    private final String targetServiceUrl;
+    private final String elasticSearchEndpointIndex;
 
     /**
      * Default constructor for DynamoDBStreamHandler.
@@ -66,25 +69,36 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     @Override
     public String handleRequest(DynamodbEvent event, Context context) {
-        try {
-            for (DynamodbEvent.DynamodbStreamRecord streamRecord : event.getRecords()) {
-                switch (streamRecord.getEventName()) {
-                    case "INSERT":
-                    case "MODIFY":
-                        upsertSearchIndex(streamRecord);
-                        break;
-                    case "REMOVE":
-                        removeFromSearchIndex(streamRecord);
-                        break;
-                    default:
-                        throw new RuntimeException("Not a known operation");
-                }
-            }
-        } catch (InterruptedException | URISyntaxException | IOException e) {
-            logger.error(ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE, e);
-            throw new RuntimeException(e);
-        }
+        attempt(() -> processRecordStream(event)).orElseThrow(this::logErrorAndThrowException);
         return SUCCESS_MESSAGE;
+    }
+
+    private RuntimeException logErrorAndThrowException(Failure<Void> failure) {
+        Exception exception = failure.getException();
+        logger.error(ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE, exception);
+        throw new RuntimeException(exception);
+    }
+
+    private Void processRecordStream(DynamodbEvent event) throws InterruptedException, IOException, URISyntaxException {
+        for (DynamodbEvent.DynamodbStreamRecord streamRecord : event.getRecords()) {
+            processRecord(streamRecord);
+        }
+        return null;
+    }
+
+    private void processRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) throws
+            InterruptedException, IOException, URISyntaxException {
+        switch (streamRecord.getEventName()) {
+            case "INSERT":
+            case "MODIFY":
+                upsertSearchIndex(streamRecord);
+                break;
+            case "REMOVE":
+                removeFromSearchIndex(streamRecord);
+                break;
+            default:
+                throw new RuntimeException("Not a known operation");
+        }
     }
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
