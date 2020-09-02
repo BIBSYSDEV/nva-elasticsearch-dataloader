@@ -2,7 +2,7 @@ package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
-import elasticsearch.ElasticSearchRestClient;
+import no.unit.nva.elasticsearch.ElasticSearchRestClient;
 import nva.commons.utils.Environment;
 import nva.commons.utils.IoUtils;
 import nva.commons.utils.JsonUtils;

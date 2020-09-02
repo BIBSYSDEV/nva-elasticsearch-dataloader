@@ -1,4 +1,4 @@
-package elasticsearch;
+package no.unit.nva.elasticsearch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import nva.commons.utils.JsonUtils;

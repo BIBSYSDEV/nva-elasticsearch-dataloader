@@ -1,7 +1,7 @@
 package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
-import elasticsearch.ElasticSearchIndexDocument;
+import no.unit.nva.elasticsearch.ElasticSearchIndexDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

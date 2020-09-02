@@ -1,6 +1,5 @@
 package no.unit.nva.elasticsearch;
 
-import elasticsearch.ElasticSearchRestClient;
 import no.unit.nva.dynamodb.DynamoDBStreamHandler;
 import nva.commons.utils.Environment;
 import org.junit.jupiter.api.DisplayName;

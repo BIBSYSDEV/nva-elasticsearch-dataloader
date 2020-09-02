@@ -1,4 +1,4 @@
-package elasticsearch;
+package no.unit.nva.elasticsearch;
 
 import nva.commons.utils.Environment;
 import org.apache.http.HttpHeaders;
