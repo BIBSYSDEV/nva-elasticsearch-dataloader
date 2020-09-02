@@ -15,8 +15,11 @@ public class ElasticSearchIndexDocumentTest {
     public static final String SAMPLE_CONTRIBUTOR = "Doe, John";
     public static final String SAMPLE_CONTRIBUTOR2 = "Doe, Jane";
     public static final String SAMPLE_CONTRIBUTOR3 = "Andrè, Noen";
+    public static final String SAMPLE_OWNER = "na@unit.no";
     public static final String SAMPLE_DATE = "2020-08-26";
-    public static final String SAMPLE_RESOURCETYPE = "sampleResourceType";
+    public static final String SAMPLE_CREATED_TIMESTAMP = "2020-08-20T11:58:40.390961Z";
+    public static final String SAMPLE_MODIFIED_TIMESTAMP = "2020-08-26T12:58:40.390961Z";
+    public static final String SAMPLE_RESOURCE_TYPE = "sampleResourceType";
     public static final String SAMPLE_TITLE = "This Is A Sample Title";
 
     @Test
@@ -39,22 +42,33 @@ public class ElasticSearchIndexDocumentTest {
         assertNotNull(document);
 
 
-        document.setResourceType(SAMPLE_RESOURCETYPE);
+        document.setResourceType(SAMPLE_RESOURCE_TYPE);
         document.setDate(SAMPLE_DATE);
         document.addContributorName(SAMPLE_CONTRIBUTOR);
         document.addContributorName(SAMPLE_CONTRIBUTOR2);
         document.addContributorName(SAMPLE_CONTRIBUTOR3);
         document.setTitle(SAMPLE_TITLE);
 
+        document.setModifiedDate(SAMPLE_MODIFIED_TIMESTAMP);
+        document.setCreatedDate(SAMPLE_CREATED_TIMESTAMP);
+        document.setOwner(SAMPLE_OWNER);
+
         String json = document.toJson();
 
         assertTrue(json.contains(ElasticSearchIndexDocument.ID_KEY));
         assertTrue(json.contains(SAMPLE_DATE));
-        assertTrue(json.contains(SAMPLE_RESOURCETYPE));
+        assertTrue(json.contains(SAMPLE_RESOURCE_TYPE));
         assertTrue(json.contains(SAMPLE_CONTRIBUTOR));
         assertTrue(json.contains(SAMPLE_CONTRIBUTOR2));
         assertTrue(json.contains(SAMPLE_CONTRIBUTOR3));
         assertTrue(json.contains(SAMPLE_TITLE));
+
+        assertTrue(json.contains(SAMPLE_OWNER));
+        assertTrue(json.contains(SAMPLE_CREATED_TIMESTAMP));
+        assertTrue(json.contains(SAMPLE_MODIFIED_TIMESTAMP));
+
+
+
     }
 
 }

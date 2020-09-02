@@ -2,6 +2,7 @@ package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
+import no.unit.nva.elasticsearch.Constants;
 import no.unit.nva.elasticsearch.ElasticSearchRestClient;
 import nva.commons.utils.Environment;
 import nva.commons.utils.IoUtils;
@@ -66,16 +67,16 @@ public class DynamoDBStreamHandlerTest {
     private Environment setupMockEnvironment() {
         Environment environment = mock(Environment.class);
         doReturn(ELASTICSEARCH_ENDPOINT_ADDRESS).when(environment)
-                .readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
+                .readEnv(Constants.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
         doReturn(ELASTICSEARCH_ENDPOINT_INDEX).when(environment)
-                .readEnv(DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+                .readEnv(Constants.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
         doReturn(ELASTICSEARCH_ENDPOINT_API_SCHEME).when(environment)
-                .readEnv(ElasticSearchRestClient.ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
+                .readEnv(Constants.ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
 
         doReturn(TARGET_SERVICE_URL).when(environment)
-                .readEnv(DynamoDBStreamHandler.TARGET_SERVICE_URL_KEY);
+                .readEnv(Constants.TARGET_SERVICE_URL_KEY);
         doReturn(ELASTICSEARCH_ENDPOINT_INDEX).when(environment)
-                .readEnv(DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+                .readEnv(Constants.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
         return environment;
     }
 

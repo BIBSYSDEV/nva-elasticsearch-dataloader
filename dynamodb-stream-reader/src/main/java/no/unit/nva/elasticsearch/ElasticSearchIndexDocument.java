@@ -14,6 +14,9 @@ public class ElasticSearchIndexDocument {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexDocument.class);
 
+    private static final String CREATED_DATE_KEY = "createdDate";
+    private static final String MODIFIED_DATE_KEY = "modifiedDate";
+    private static final String OWNER_KEY = "owner";
     private static final String CONTRIBUTORS_KEY = "contributor";
     private static final String TITLE_KEY = "title";
     private static final String DATE_KEY = "date";
@@ -89,6 +92,33 @@ public class ElasticSearchIndexDocument {
     public void setResourceType(String resourceType) {
         values.put(RESOURCE_TYPE_KEY, resourceType);
     }
+
+    /**
+     * Sets the owner of the resource.
+     * @param owner identified of owner of the resource. ie. feideid
+     */
+    public void setOwner(String owner) {
+        values.put(OWNER_KEY, owner);
+    }
+
+    /**
+     * Sets the modifiedDate of the resource.
+     * @param modifiedDate date when the resource is last modified
+     */
+    public void setModifiedDate(String modifiedDate) {
+        values.put(MODIFIED_DATE_KEY, modifiedDate);
+    }
+
+    /**
+     * Sets the createdDate of the resource.
+     * @param createdDate date when the resource is created
+     */
+    public void setCreatedDate(String createdDate) {
+        values.put(CREATED_DATE_KEY, createdDate);
+    }
+
+
+
 
     /**
      * Generates JSON string to be inserted into elasticsearch.

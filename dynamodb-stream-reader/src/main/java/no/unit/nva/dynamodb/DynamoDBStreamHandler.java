@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
+import no.unit.nva.elasticsearch.Constants;
 import no.unit.nva.elasticsearch.ElasticSearchIndexDocument;
 import no.unit.nva.elasticsearch.ElasticSearchRestClient;
 import nva.commons.utils.Environment;
@@ -23,16 +24,9 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBStreamHandler.class);
 
-    public static final String ELASTICSEARCH_ENDPOINT_INDEX_KEY = "ELASTICSEARCH_ENDPOINT_INDEX";
-    public static final String TARGET_SERVICE_URL_KEY = "TARGET_SERVICE_URL";
-
-    public static final String IDENTIFIER = "identifier";
-    public static final String DATE_YEAR = "entityDescription.date.year";
-    public static final String DESCRIPTION_MAIN_TITLE = "entityDescription.mainTitle";
-    public static final String CONTRIBUTORS_IDENTITY_NAME = "entityDescription.contributors.identity.name";
-    public static final String PUBLICATION_TYPE = "type";
     public static final String ERROR_PROCESSING_DYNAMO_DBEVENT_MESSAGE = "Error processing DynamoDBEvent";
     public static final String SUCCESS_MESSAGE = "200 OK";
+
     private final ElasticSearchRestClient elasticSearchClient;
     private final String targetServiceUrl;
     private final String elasticSearchEndpointIndex;
@@ -63,8 +57,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     @JacocoGenerated
     public DynamoDBStreamHandler(ElasticSearchRestClient elasticSearchRestClient, Environment environment) {
         this.elasticSearchClient = elasticSearchRestClient;
-        targetServiceUrl = environment.readEnv(TARGET_SERVICE_URL_KEY);
-        elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
+        targetServiceUrl = environment.readEnv(Constants.TARGET_SERVICE_URL_KEY);
+        elasticSearchEndpointIndex = environment.readEnv(Constants.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
     }
 
     @Override
@@ -124,7 +118,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     }
 
     private String getIdentifierFromStreamRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) {
-        return streamRecord.getDynamodb().getKeys().get(IDENTIFIER).getS();
+        return streamRecord.getDynamodb().getKeys().get(Constants.IDENTIFIER).getS();
     }
 
 }

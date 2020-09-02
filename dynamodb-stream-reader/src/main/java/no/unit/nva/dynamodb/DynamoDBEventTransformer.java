@@ -1,6 +1,7 @@
 package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
+import no.unit.nva.elasticsearch.Constants;
 import no.unit.nva.elasticsearch.ElasticSearchIndexDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,18 +10,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static no.unit.nva.dynamodb.DynamoDBStreamHandler.CONTRIBUTORS_IDENTITY_NAME;
-import static no.unit.nva.dynamodb.DynamoDBStreamHandler.DATE_YEAR;
-import static no.unit.nva.dynamodb.DynamoDBStreamHandler.DESCRIPTION_MAIN_TITLE;
-import static no.unit.nva.dynamodb.DynamoDBStreamHandler.PUBLICATION_TYPE;
+import static no.unit.nva.elasticsearch.Constants.CONTRIBUTORS_IDENTITY_NAME;
+import static no.unit.nva.elasticsearch.Constants.CREATED_DATE_KEY;
+import static no.unit.nva.elasticsearch.Constants.DATE_YEAR;
+import static no.unit.nva.elasticsearch.Constants.DESCRIPTION_MAIN_TITLE;
+import static no.unit.nva.elasticsearch.Constants.MODIFIED_DATE_KEY;
+import static no.unit.nva.elasticsearch.Constants.OWNER_NAME_KEY;
+import static no.unit.nva.elasticsearch.Constants.PUBLICATION_TYPE;
 
 public class DynamoDBEventTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBEventTransformer.class);
 
-    public static final String SIMPLE_DOT_SEPARATOR = ".";
-    public static final String EMPTY_STRING = "";
     public static final String UNKNOWN_VALUE_KEY_MESSAGE = "Unknown valueKey: {}";
+
 
     private final Set<String> wantedIndexes = Set.of(DATE_YEAR,
             DESCRIPTION_MAIN_TITLE,
@@ -45,7 +48,7 @@ public class DynamoDBEventTransformer {
                                                     Map<String, AttributeValue> valueMap) {
         ElasticSearchIndexDocument document =
                 new ElasticSearchIndexDocument(elasticSearchIndexName, targetServiceUrl, identifier);
-        parse(document, EMPTY_STRING, valueMap);
+        parse(document, Constants.EMPTY_STRING, valueMap);
         return document;
     }
 
@@ -84,11 +87,20 @@ public class DynamoDBEventTransformer {
             case PUBLICATION_TYPE:
                 document.setResourceType(value);
                 break;
+            case OWNER_NAME_KEY:
+                document.setOwner(value);
+                break;
             case CONTRIBUTORS_IDENTITY_NAME:
                 document.addContributorName(value);
                 break;
             case DESCRIPTION_MAIN_TITLE:
                 document.setTitle(value);
+                break;
+            case CREATED_DATE_KEY:
+                document.setCreatedDate(value);
+                break;
+            case MODIFIED_DATE_KEY:
+                document.setModifiedDate(value);
                 break;
             case DATE_YEAR:
                 document.setDate(value);
@@ -105,7 +117,7 @@ public class DynamoDBEventTransformer {
 
     private String addIndexPrefix(String prefix, String k) {
         if (prefix != null && !prefix.isEmpty()) {
-            return prefix + SIMPLE_DOT_SEPARATOR + k;
+            return prefix + Constants.SIMPLE_DOT_SEPARATOR + k;
         } else {
             return k;
         }

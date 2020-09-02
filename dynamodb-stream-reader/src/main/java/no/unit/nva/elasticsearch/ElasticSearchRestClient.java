@@ -13,23 +13,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import static no.unit.nva.dynamodb.DynamoDBStreamHandler.ELASTICSEARCH_ENDPOINT_INDEX_KEY;
+import static no.unit.nva.elasticsearch.Constants.ELASTICSEARCH_ENDPOINT_INDEX_KEY;
 
 public class ElasticSearchRestClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchRestClient.class);
 
-    private static final String ELASTICSEARCH_ENDPOINT_OPERATION = "_doc";
     public static final String INITIAL_LOG_MESSAGE = "using Elasticsearch endpoint {} {} and index {}";
-
     public static final String UPSERTING_LOG_MESSAGE = "Upserting search index  with values {}";
     public static final String DELETE_LOG_MESSAGE = "Deleting from search API publication with identifier: {}";
-    public static final String ELASTICSEARCH_ENDPOINT_ADDRESS_KEY = "ELASTICSEARCH_ENDPOINT_ADDRESS";
-    public static final String ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY = "ELASTICSEARCH_ENDPOINT_API_SCHEME";
-
-    // protocol, host , elasicseatch-indexname, elasicsearch-index-operation, identifier
     public static final String POSTING_TO_ENDPOINT_LOG_MESSAGE = "POSTing {} to endpoint {}";
-    public static final String ELASTICSEARCH_ENDPOINT_URI_TEMPLATE = "%s://%s/%s/%s/%s";
 
     private final HttpClient client;
     private final String elasticSearchEndpointAddress;
@@ -44,9 +37,9 @@ public class ElasticSearchRestClient {
      */
     public ElasticSearchRestClient(HttpClient httpClient, Environment environment) {
         client = httpClient;
-        elasticSearchEndpointAddress = environment.readEnv(ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
+        elasticSearchEndpointAddress = environment.readEnv(Constants.ELASTICSEARCH_ENDPOINT_ADDRESS_KEY);
         elasticSearchEndpointIndex = environment.readEnv(ELASTICSEARCH_ENDPOINT_INDEX_KEY);
-        elasticSearchEndpointScheme = environment.readEnv(ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
+        elasticSearchEndpointScheme = environment.readEnv(Constants.ELASTICSEARCH_ENDPOINT_API_SCHEME_KEY);
 
         logger.info(INITIAL_LOG_MESSAGE,
                 elasticSearchEndpointScheme, elasticSearchEndpointAddress, elasticSearchEndpointIndex);
@@ -104,7 +97,6 @@ public class ElasticSearchRestClient {
                 .DELETE()
                 .build();
 
-        logger.debug("DELETEing {} ", createUpsertDocumentURI(identifier));
         HttpResponse<String> response = doSend(request);
         logger.debug(response.body());
     }
@@ -114,9 +106,9 @@ public class ElasticSearchRestClient {
     }
 
     private URI createUpsertDocumentURI(String identifier) {
-        String uriString = String.format(ELASTICSEARCH_ENDPOINT_URI_TEMPLATE,
+        String uriString = String.format(Constants.ELASTICSEARCH_ENDPOINT_URI_TEMPLATE,
                 elasticSearchEndpointScheme, elasticSearchEndpointAddress,
-                elasticSearchEndpointIndex, ELASTICSEARCH_ENDPOINT_OPERATION, identifier);
+                elasticSearchEndpointIndex, Constants.ELASTICSEARCH_ENDPOINT_OPERATION, identifier);
         return URI.create(uriString);
     }
 
