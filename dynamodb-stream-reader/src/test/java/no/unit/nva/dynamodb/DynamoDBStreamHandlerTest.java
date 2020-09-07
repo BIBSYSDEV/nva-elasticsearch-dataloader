@@ -10,10 +10,12 @@ import nva.commons.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Paths;
 
@@ -26,7 +28,6 @@ import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @SuppressWarnings("unchecked")
@@ -49,13 +50,13 @@ public class DynamoDBStreamHandlerTest {
     /**
      * Set up test environment.
      *
-     * @throws IOException some error occurred
+     * @throws IOException          some error occurred
      * @throws InterruptedException another error occurred
      */
     @BeforeEach
     public void init() throws IOException, InterruptedException {
         context = mock(Context.class);
-        httpClient = spy(HttpClient.class);
+        httpClient = mock(HttpClient.class);
         Environment environment = setupMockEnvironment();
 
         HttpResponse<String> successResponse = mock(HttpResponse.class);
@@ -83,18 +84,18 @@ public class DynamoDBStreamHandlerTest {
     @Test
     @DisplayName("testCreateHandlerWithEmptyEnvironmentShouldFail")
     public void testCreateHandlerWithEmptyEnvironmentShouldFail() throws IOException, InterruptedException {
-        Exception exception  = assertThrows(IllegalStateException.class, () -> new DynamoDBStreamHandler());
+        Exception exception = assertThrows(IllegalStateException.class, () -> new DynamoDBStreamHandler());
         assertTrue(exception.getMessage().contains("Environment variable not set"));
-        verify(httpClient,atMost(0)).send(any(), any());
+        verify(httpClient, atMost(0)).send(any(), any());
     }
 
     @Test
     @DisplayName("testHandlerHandleSimpleModifyEventWithoutProblem")
     public void testHandlerHandleSimpleModifyEventWithoutProblem() throws IOException, InterruptedException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
-        String response =  handler.handleRequest(requestEvent, context);
-        verify(httpClient,atLeast(1)).send(any(), any());
-        verify(httpClient,atMost(1)).send(any(), any());
+        String response = handler.handleRequest(requestEvent, context);
+        verify(httpClient, atLeast(1)).send(any(), any());
+        verify(httpClient, atMost(1)).send(any(), any());
         assertNotNull(response);
     }
 
@@ -102,9 +103,9 @@ public class DynamoDBStreamHandlerTest {
     @DisplayName("testHandlerHandleSimpleInsertEventWithoutProblem")
     public void testHandlerHandleSimpleInsertEventWithoutProblem() throws IOException, InterruptedException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_INSERT_EVENT_FILENAME);
-        String response =  handler.handleRequest(requestEvent, context);
-        verify(httpClient,atLeast(1)).send(any(), any());
-        verify(httpClient,atMost(1)).send(any(), any());
+        String response = handler.handleRequest(requestEvent, context);
+        verify(httpClient, atLeast(1)).send(any(), any());
+        verify(httpClient, atMost(1)).send(any(), any());
         assertNotNull(response);
     }
 
@@ -112,9 +113,9 @@ public class DynamoDBStreamHandlerTest {
     @DisplayName("testHandlerHandleSimpleRemoveEventWithoutProblem")
     public void testHandlerHandleSimpleRemoveEventWithoutProblem() throws IOException, InterruptedException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_REMOVE_EVENT_FILENAME);
-        String response =  handler.handleRequest(requestEvent, context);
-        verify(httpClient,atLeast(1)).send(any(), any());
-        verify(httpClient,atMost(1)).send(any(), any());
+        String response = handler.handleRequest(requestEvent, context);
+        verify(httpClient, atLeast(1)).send(any(), any());
+        verify(httpClient, atMost(1)).send(any(), any());
         assertNotNull(response);
     }
 
@@ -123,7 +124,7 @@ public class DynamoDBStreamHandlerTest {
     public void testHandleUnknownEventToGiveException() throws IOException, InterruptedException {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_UNKNOWN_EVENT_FILENAME);
         assertThrows(RuntimeException.class, () -> handler.handleRequest(requestEvent, context));
-        verify(httpClient,atMost(0)).send(any(), any());
+        verify(httpClient, atMost(0)).send(any(), any());
     }
 
     @Test
@@ -132,8 +133,24 @@ public class DynamoDBStreamHandlerTest {
         DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
         doThrow(IOException.class).when(httpClient).send(any(), any());
         assertThrows(RuntimeException.class, () -> handler.handleRequest(requestEvent, context));
-        verify(httpClient,atMost(1)).send(any(), any());
-        verify(httpClient,atLeast(1)).send(any(), any());
+        verify(httpClient, atMost(1)).send(any(), any());
+        verify(httpClient, atLeast(1)).send(any(), any());
+    }
+
+    @Test
+    public void dynamoDBStreamHandlerDoCreateHttpRequestFromModifyEvent() throws IOException, InterruptedException {
+
+        HttpResponse<String> successResponse = mock(HttpResponse.class);
+        final ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        doReturn(successResponse).when(httpClient).send(httpRequestArgumentCaptor.capture(), any());
+
+        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
+        handler.handleRequest(requestEvent, context);
+
+        final HttpRequest httpRequest = httpRequestArgumentCaptor.getValue();
+
+        assertNotNull(httpRequest);
+        System.out.println(httpRequest);
     }
 
     private DynamodbEvent loadEventFromResourceFile(String filename) throws IOException {

@@ -1,5 +1,8 @@
 package no.unit.nva.elasticsearch;
 
+import nva.commons.utils.JacocoGenerated;
+
+@JacocoGenerated
 public class Constants {
     public static final String CREATED_DATE_KEY = "createdDate";
     public static final String TARGET_SERVICE_URL_KEY = "TARGET_SERVICE_URL";

@@ -59,7 +59,7 @@ public class ElasticSearchIndexDocument {
 
     /**
      * Adds a contributors name to the document.
-     * The document an hold multiple contributors
+     * The document can hold multiple contributors
      * @param name name of the contributor
      */
     public void addContributorName(String name) {
@@ -69,55 +69,29 @@ public class ElasticSearchIndexDocument {
         contributors.add(contributorMap);
     }
 
-    /**
-     * Sets the title of the resource in document.
-     * @param title title of resource
-     */
     public void setTitle(String title) {
         values.put(TITLE_KEY, title);
     }
 
-    /**
-     * Date assosiated with the resource.
-     * @param dateString date on the form "YYYY-MM-DD"
-     */
     public void setDate(String dateString) {
         values.put(DATE_KEY, dateString);
     }
 
-    /**
-     * Sets the type of the resource.
-     * @param resourceType type of resource. ie. JournalArticle
-     */
     public void setResourceType(String resourceType) {
         values.put(RESOURCE_TYPE_KEY, resourceType);
     }
 
-    /**
-     * Sets the owner of the resource.
-     * @param owner identified of owner of the resource. ie. feideid
-     */
     public void setOwner(String owner) {
         values.put(OWNER_KEY, owner);
     }
 
-    /**
-     * Sets the modifiedDate of the resource.
-     * @param modifiedDate date when the resource is last modified
-     */
     public void setModifiedDate(String modifiedDate) {
         values.put(MODIFIED_DATE_KEY, modifiedDate);
     }
 
-    /**
-     * Sets the createdDate of the resource.
-     * @param createdDate date when the resource is created
-     */
     public void setCreatedDate(String createdDate) {
         values.put(CREATED_DATE_KEY, createdDate);
     }
-
-
 
 
     /**

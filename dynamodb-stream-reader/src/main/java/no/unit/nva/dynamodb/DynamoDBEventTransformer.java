@@ -26,7 +26,10 @@ public class DynamoDBEventTransformer {
 
 
     private final Set<String> wantedIndexes = Set.of(DATE_YEAR,
+            CREATED_DATE_KEY,
+            MODIFIED_DATE_KEY,
             DESCRIPTION_MAIN_TITLE,
+            OWNER_NAME_KEY,
             CONTRIBUTORS_IDENTITY_NAME,
             PUBLICATION_TYPE);
 
