@@ -23,8 +23,17 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Flow;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static java.net.http.HttpResponse.BodySubscribers;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @SuppressWarnings("unchecked")
 public class DynamoDBStreamHandlerTest {
@@ -151,7 +160,7 @@ public class DynamoDBStreamHandlerTest {
 
 
     @Test
-    public void dynamoDBStreamHandlerDoCreateHttpRequestFromModifyEventSendTransformedData() throws IOException, InterruptedException {
+    public void dynamoDBStreamHandlerDoCreateHttpRequestFromModifyEventSendTransformedData() throws Exception {
 
         HttpResponse<String> successResponse = mock(HttpResponse.class);
         final ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
@@ -162,12 +171,12 @@ public class DynamoDBStreamHandlerTest {
 
         final HttpRequest httpRequest = httpRequestArgumentCaptor.getValue();
         String body = httpRequest.bodyPublisher().map(
-                       p -> {
-            var bodySubscriber = HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8);
-            var flowSubscriber = new StringSubscriber(bodySubscriber);
-            p.subscribe(flowSubscriber);
-            return bodySubscriber.getBody().toCompletableFuture().join();
-        }).get();
+            p -> {
+                var bodySubscriber = BodySubscribers.ofString(StandardCharsets.UTF_8);
+                var flowSubscriber = new StringSubscriber(bodySubscriber);
+                p.subscribe(flowSubscriber);
+                return bodySubscriber.getBody().toCompletableFuture().join();
+            }).get();
 
         System.out.println(body);
         assertNotNull(httpRequest);
@@ -182,19 +191,30 @@ public class DynamoDBStreamHandlerTest {
 
     static final class StringSubscriber implements Flow.Subscriber<ByteBuffer> {
         final HttpResponse.BodySubscriber<String> wrapped;
+
         StringSubscriber(HttpResponse.BodySubscriber<String> wrapped) {
             this.wrapped = wrapped;
         }
+
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
             wrapped.onSubscribe(subscription);
         }
+
         @Override
-        public void onNext(ByteBuffer item) { wrapped.onNext(List.of(item)); }
+        public void onNext(ByteBuffer item) {
+            wrapped.onNext(List.of(item));
+        }
+
         @Override
-        public void onError(Throwable throwable) { wrapped.onError(throwable); }
+        public void onError(Throwable throwable) {
+            wrapped.onError(throwable);
+        }
+
         @Override
-        public void onComplete() { wrapped.onComplete(); }
+        public void onComplete() {
+            wrapped.onComplete();
+        }
     }
 
 }
