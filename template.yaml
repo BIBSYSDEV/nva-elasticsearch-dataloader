@@ -3,6 +3,12 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
     NVA DynamoDB Resources stream reader trigger
 
+Parameters:
+
+  ResourcesTableStreamArn:
+    Description: ARN of stream containing events from dynamodb
+    Type: String
+#    Default: !ImportValue NvaResourcesTableStreamArn
 
 Resources:
 
@@ -103,7 +109,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       Enabled: true
-      EventSourceArn: !ImportValue NvaResourcesTableStreamArn
+      EventSourceArn: !Ref ResourcesTableStreamArn
       FunctionName: !Ref ReadDynamoDBStreamsTrigger
       StartingPosition: LATEST
 
