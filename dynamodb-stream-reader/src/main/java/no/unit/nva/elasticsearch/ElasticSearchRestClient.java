@@ -1,5 +1,6 @@
 package no.unit.nva.elasticsearch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import nva.commons.utils.Environment;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
@@ -8,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -48,12 +48,11 @@ public class ElasticSearchRestClient {
     /**
      * Adds or insert a document to an elasticsearch index.
      * @param document the document to be inserted
-     * @throws URISyntaxException thrown when uri is misconfigured
      * @throws IOException thrown hen service i not available
      * @throws InterruptedException thrown when service i interrupted
      */
-    public void addDocumentToIndex(ElasticSearchIndexDocument document)
-            throws URISyntaxException, IOException, InterruptedException {
+    public void addDocumentToIndex(IndexDocument document)
+            throws IOException, InterruptedException {
         logger.debug(UPSERTING_LOG_MESSAGE, document);
 
         HttpRequest request = createHttpRequest(document);
@@ -62,9 +61,9 @@ public class ElasticSearchRestClient {
         logger.debug(response.body());
     }
 
-    private HttpRequest createHttpRequest(ElasticSearchIndexDocument document) throws URISyntaxException {
-        String requestBody = document.toJson();
-        String identifier = document.getInternalIdentifier();
+    private HttpRequest createHttpRequest(IndexDocument document) throws JsonProcessingException {
+        String requestBody = document.toJsonString();
+        String identifier = document.getIdentifier();
 
         HttpRequest request = buildHttpRequest(requestBody, identifier);
 
@@ -72,7 +71,7 @@ public class ElasticSearchRestClient {
         return request;
     }
 
-    private HttpRequest buildHttpRequest(String requestBody, String identifier) throws URISyntaxException {
+    private HttpRequest buildHttpRequest(String requestBody, String identifier) {
         return HttpRequest.newBuilder()
                 .uri(createUpsertDocumentURI(identifier))
                 .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType())
@@ -83,12 +82,11 @@ public class ElasticSearchRestClient {
     /**
      * Removes an indexed document from elasticsearch index.
      * @param identifier identifier of document to remove from elasticsearch
-     * @throws URISyntaxException thrown when uri is misconfigured
      * @throws IOException thrown hen service i not available
      * @throws InterruptedException thrown when service i interrupted
      */
     public void removeDocumentFromIndex(String identifier)
-            throws URISyntaxException, IOException, InterruptedException {
+            throws IOException, InterruptedException {
         logger.trace(DELETE_LOG_MESSAGE, identifier);
 
         HttpRequest request = HttpRequest.newBuilder()

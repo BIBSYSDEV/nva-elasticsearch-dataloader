@@ -42,7 +42,7 @@ public class ElasticSearchIndexDocument {
         this.serviceUrl = serviceUrl;
         this.internalIdentifier = internalIdentifier;
         values.put(ID_KEY, serviceUrl + internalIdentifier);
-        values.put(CONTRIBUTORS_KEY, new ArrayList<Object>());
+        values.put(CONTRIBUTORS_KEY, new ArrayList<>());
     }
 
     public String getServiceUrl() {
