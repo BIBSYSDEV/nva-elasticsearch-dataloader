@@ -112,5 +112,5 @@ Outputs:
   ReadDynamoDBStreamsTrigger:
     Description: ARN Identifier of the ReadDynamoDBStreamsTrigger
     Value: !GetAtt ReadDynamoDBStreamsTrigger.Arn
-    Export:
-      Name: ReadDynamoDBStreamsTriggerArn
+#    Export:
+#      Name: ReadDynamoDBStreamsTriggerArn
