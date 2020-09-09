@@ -31,9 +31,11 @@ import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Flow;
+import java.util.stream.Collectors;
 
 import static java.net.http.HttpResponse.BodySubscribers;
 import static java.util.Objects.nonNull;
@@ -70,8 +72,10 @@ public class DynamoDBStreamHandlerTest {
     public static final String EVENT_JSON_LIST_NAME = "l";
     public static final String CONTRIBUTOR_TEMPLATE_JSON = "contributorTemplate.json";
     public static final String EVENT_TEMPLATE_JSON = "eventTemplate.json";
-    public static final String ENTITY_DESCRIPTION_MAIN_TITLE_POINTER = "/records/0/dynamodb/newImage/entityDescription/m/mainTitle";
-    public static final String PUBLICATION_INSTANCE_TYPE_POINTER = "/records/0/dynamodb/newImage/entityDescription/m/reference/m/publicationInstance/m/type";
+    public static final String ENTITY_DESCRIPTION_MAIN_TITLE_POINTER =
+            "/records/0/dynamodb/newImage/entityDescription/m/mainTitle";
+    public static final String PUBLICATION_INSTANCE_TYPE_POINTER =
+            "/records/0/dynamodb/newImage/entityDescription/m/reference/m/publicationInstance/m/type";
     public static final String FIRST_RECORD_POINTER = "/records/0";
     public static final String EVENT_NAME = "eventName";
     public static final String MODIFY = "MODIFY";
@@ -80,7 +84,8 @@ public class DynamoDBStreamHandlerTest {
     public static final int YEAR_INDEX = 0;
     public static final int MONTH_INDEX = 1;
     public static final int DAY_INDEX = 2;
-    public static final String ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER = "/records/0/dynamodb/newImage/entityDescription/m/date/m";
+    public static final String ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER =
+            "/records/0/dynamodb/newImage/entityDescription/m/date/m";
     public static final String EVENT_YEAR_NAME = "year";
     public static final String EVENT_MONTH_NAME = "month";
     public static final String EVENT_DAY_NAME = "day";
@@ -187,12 +192,14 @@ public class DynamoDBStreamHandlerTest {
     }
 
     @Test
+    @DisplayName("Test dynamoDBStreamHandler with complete record, single author")
     public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithContributorsWhenInputIsModifyEvent() throws
             IOException, InterruptedException {
         String identifier = "1006a";
         String contributorIdentifier = "123";
         String contributorName = "Bólsön Kölàdỳ";
-        List<Contributor> contributors = Collections.singletonList(generateContributor(contributorIdentifier, contributorName, 1));
+        List<Contributor> contributors = Collections.singletonList(
+                generateContributor(contributorIdentifier, contributorName, 1));
         String mainTitle = "Moi buki";
         String type = "Book";
         String date = "2020-09-08";
@@ -200,18 +207,74 @@ public class DynamoDBStreamHandlerTest {
         DynamodbEvent requestEvent = generateRequestEvent(MODIFY, identifier, type, mainTitle, contributors, date);
         JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
 
-        IndexDocument expected = generateIndexDocument(identifier, contributorIdentifier, contributorName, mainTitle, type, date);
+        IndexDocument expected = generateIndexDocument(identifier, contributors, mainTitle, type, date);
         IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
 
         assertThat(actual, samePropertyValuesAs(expected));
     }
 
     @Test
+    @DisplayName("Test dynamoDBStreamHandler with complete record, multiple authors")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithMultipleContributorsWhenInputIsModifyEvent()
+            throws IOException, InterruptedException {
+        String identifier = "1006a";
+        String firstContributorIdentifier = "123";
+        String firstContributorName = "Bólsön Kölàdỳ";
+        String secondContributorIdentifier = "345";
+        String secondContributorName = "Mèrdok Hüber";
+        List<Contributor> contributors = new ArrayList<>();
+        contributors.add(generateContributor(firstContributorIdentifier, firstContributorName, 1));
+        contributors.add(generateContributor(secondContributorIdentifier, secondContributorName, 2));
+        String mainTitle = "Moi buki";
+        String type = "Book";
+        String date = "2020-09-08";
+
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, identifier, type, mainTitle, contributors, date);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
+
+        IndexDocument expected = generateIndexDocument(identifier, contributors, mainTitle, type, date);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
+
+        assertThat(actual, samePropertyValuesAs(expected));
+    }
+
+    @Test
+    @DisplayName("Test dynamoDBStreamHandler with empty record, year only")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithYearOnlyWhenInputIsModifyEvent() throws
+            IOException, InterruptedException {
+        String date = "2020";
+
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, null, null, null, null, date);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
+
+        IndexDocument expected = generateIndexDocument(null, Collections.emptyList(), null, null, date);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
+
+        assertThat(actual, samePropertyValuesAs(expected));
+    }
+
+    @Test
+    @DisplayName("Test dynamoDBStreamHandler with empty record, year and month only")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithYearAndMonthOnlyWhenInputIsModifyEvent()
+            throws IOException, InterruptedException {
+        String date = "2020-09";
+
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, null, null, null, null, date);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
+
+        IndexDocument expected = generateIndexDocument(null, Collections.emptyList(), null, null, date);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
+
+        assertThat(actual, samePropertyValuesAs(expected));
+    }
+
+    @Test
+    @DisplayName("Test dynamoDBStreamHandler with empty record")
     public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentNullValuesWhenInputIsModifyEvent() throws
             IOException, InterruptedException {
         DynamodbEvent requestEvent = generateRequestEvent(MODIFY, null, null, null, null, null);
         JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
-        IndexDocument expected = generateIndexDocument(null, null, null, null, null, null);
+        IndexDocument expected = generateIndexDocument(null, Collections.emptyList(), null, null, null);
         IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
         assertThat(actual, samePropertyValuesAs(expected));
     }
@@ -224,29 +287,27 @@ public class DynamoDBStreamHandlerTest {
     }
 
     private IndexDocument generateIndexDocument(String identifier,
-                                                String contributorIdentifier,
-                                                String contributorName,
+                                                List<Contributor> contributors,
                                                 String mainTitle,
                                                 String type,
                                                 String date) {
-        IndexContributor indexContributor = generateIndexContributor(contributorIdentifier, contributorName);
-        List<IndexContributor> contributors = nonNull(contributorName)
-                ? Collections.singletonList(indexContributor)
-                : Collections.emptyList();
+        List<IndexContributor> indexContributors = contributors.stream()
+                .map(this::generateIndexContributor)
+                .collect(Collectors.toList());
 
         return new IndexDocument.Builder()
                 .withTitle(mainTitle)
                 .withType(type)
                 .withIdentifier(identifier)
-                .withContributors(contributors)
+                .withContributors(indexContributors)
                 .withDate(date)
                 .build();
     }
 
-    private IndexContributor generateIndexContributor(String identifier, String name) {
+    private IndexContributor generateIndexContributor(Contributor contributor) {
         return new IndexContributor.Builder()
-                    .withIdentifier(identifier)
-                    .withName(name)
+                    .withIdentifier(contributor.getIdentity().getArpId())
+                    .withName(contributor.getIdentity().getName())
                     .build();
     }
 
@@ -269,13 +330,31 @@ public class DynamoDBStreamHandlerTest {
     private void updateDate(String date, JsonNode event) {
         if (nonNull(date)) {
             String[] splitDate = date.split(DATE_SEPARATOR);
-            updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
-                    EVENT_YEAR_NAME, splitDate[YEAR_INDEX]);
-            updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
-                    EVENT_MONTH_NAME, splitDate[MONTH_INDEX]);
-            updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
-                    EVENT_DAY_NAME, splitDate[DAY_INDEX]);
+            if (isYearOnly(splitDate)) {
+                updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
+                        EVENT_YEAR_NAME, splitDate[YEAR_INDEX]);
+            }
+            if (isYearAndMonth(splitDate)) {
+                updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
+                        EVENT_MONTH_NAME, splitDate[MONTH_INDEX]);
+            }
+            if (isYearMonthDay(splitDate)) {
+                updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
+                        EVENT_DAY_NAME, splitDate[DAY_INDEX]);
+            }
         }
+    }
+
+    private boolean isYearMonthDay(String[] splitDate) {
+        return splitDate.length == 3;
+    }
+
+    private boolean isYearAndMonth(String[] splitDate) {
+        return splitDate.length >= 2;
+    }
+
+    private boolean isYearOnly(String[] splitDate) {
+        return splitDate.length >= 1;
     }
 
     private void updateEventAtPointerWithNameAndValue(JsonNode event, String pointer, String name, Object value) {
@@ -336,7 +415,8 @@ public class DynamoDBStreamHandlerTest {
         ArrayNode contributorsArrayNode = mapper.createArrayNode();
         if (nonNull(contributors)) {
             contributors.forEach(contributor -> updateContributor(contributorsArrayNode, contributor));
-            updateEventAtPointerWithNameAndArrayValue(event, CONTRIBUTOR_POINTER, EVENT_JSON_LIST_NAME, contributorsArrayNode);
+            updateEventAtPointerWithNameAndArrayValue(event, CONTRIBUTOR_POINTER, EVENT_JSON_LIST_NAME,
+                    contributorsArrayNode);
             ((ObjectNode) event.at(CONTRIBUTOR_POINTER)).set(EVENT_JSON_LIST_NAME, contributorsArrayNode);
         }
     }

@@ -7,6 +7,7 @@ import no.unit.nva.elasticsearch.IndexContributor;
 import no.unit.nva.elasticsearch.IndexDocument;
 import nva.commons.utils.JsonUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,7 +19,6 @@ public class DynamoDBEventTransformer {
 
     private static final ObjectMapper mapper = JsonUtils.objectMapper;
 
-    public static final String FLAT_DATE_TEMPLATE = "%s-%s-%s";
     public static final String YEAR_JSON_POINTER = "/entityDescription/m/date/m/year/s";
     public static final String MONTH_JSON_POINTER = "/entityDescription/m/date/m/month/s";
     public static final String DAY_JSON_POINTER = "/entityDescription/m/date/m/day/s";
@@ -28,6 +28,7 @@ public class DynamoDBEventTransformer {
     public static final String IDENTIFIER_JSON_POINTER = "/identifier/s";
     public static final String MAIN_TITLE_JSON_POINTER = "/entityDescription/m/mainTitle/s";
     public static final String TYPE_JSON_POINTER = "/entityDescription/m/reference/m/publicationInstance/m/type/s";
+    public static final String DATE_SEPARATOR = "-";
 
     /**
      * Creates a DynamoDBEventTransformer which creates a ElasticSearchIndexDocument from an dynamoDBEvent.
@@ -93,7 +94,21 @@ public class DynamoDBEventTransformer {
     }
 
     private String formatDate(String year, String month, String day) {
-        return nonNull(year) && !year.isEmpty() ? String.format(FLAT_DATE_TEMPLATE, year, month, day) : null;
+        List<String> dateElements = new ArrayList<>();
+        if (nonNull(year)) {
+            dateElements.add(year);
+        }
+        if (valueIsPresentAndHasPrecedingValues(month, dateElements)) {
+            dateElements.add(month);
+        }
+        if (valueIsPresentAndHasPrecedingValues(day, dateElements)) {
+            dateElements.add(day);
+        }
+        return String.join(DATE_SEPARATOR, dateElements);
+    }
+
+    private boolean valueIsPresentAndHasPrecedingValues(String month, List<String> dateElements) {
+        return nonNull(month) && !dateElements.isEmpty();
     }
 
     private IndexContributor generateIndexContributor(String identifier, String name) {
