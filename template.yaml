@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    NVA DynamoDB Resources stream reader trigger
+
+#Metadata:
+#  AWS::ServerlessRepo::Application:
+#    Name: NvaDynamoDBUpdateTrigger
+#    Description: NVA DynamoDB utility for reading streams and events
+#    Author: Unit
+#    SpdxLicenseId: MIT
+#    LicenseUrl: LICENSE
+#    Labels: ['${GIT_REPO}', '${CODEBUILD_RESOLVED_SOURCE_VERSION}', '@${BUILD_TIMESTAMP}']
+
+Globals:
+  Function:
+    Timeout: 20
+
+#Parameters:
+#  CustomDomain:
+#    Type: String
+#    Description: Custom API to connect this lambda to
+
+Resources:
+  
+  TriggerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: writeLog
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*"
+        - PolicyName: ReadDynamoDBStreams
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetShardIterator
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:ListStreams
+                Resource: arn:aws:dynamodb:*:884807050265:table/*/stream/*
+
+#  InvokeReadDynamoDBStreamsTriggerPermission:
+#    Type: AWS::Lambda::Permission
+#    Properties:
+#      Action: lambda:InvokeFunction
+#      FunctionName: !Ref ReadDynamoDBStreamsTrigger
+#      Principal: cognito-idp.amazonaws.com
+
+  ReadDynamoDBStreamsTrigger:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dynamodb-stream-reader
+      Handler: no.unit.nva.dynamodb.DynamoDBStreamHandler::handleRequest
+      Runtime: java11
+      Role: !GetAtt TriggerExecutionRole.Arn
+      MemorySize: 1408
+      Environment:
+        Variables:
+          ELASTICSEARCH_ENDPOINT_ADDRESS: !ImportValue NVAElasticSearchDomainEndpoint
+          ELASTICSEARCH_ENDPOINT_INDEX: resources
+          ELASTICSEARCH_ENDPOINT_API_SCHEME: https
+          TARGET_SERVICE_URL: https://api.dev.nva.aws.unit.no/publication/
+
+  TriggerLambdaMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      Enabled: true
+      EventSourceArn: !ImportValue NvaResourcesTableStreamArn
+      FunctionName: !Ref ReadDynamoDBStreamsTrigger
+      StartingPosition: LATEST
+
+
+Outputs:
+  ReadDynamoDBStreamsTrigger:
+    Description: ARN Identifier of the ReadDynamoDBStreamsTrigger
+    Value: !GetAtt ReadDynamoDBStreamsTrigger.Arn
+    Export:
+      Name: ReadDynamoDBStreamsTriggerArn
