@@ -1,37 +1,34 @@
 package no.unit.nva.dynamodb;
 
-import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
-import no.unit.nva.elasticsearch.Constants;
-import no.unit.nva.elasticsearch.ElasticSearchIndexDocument;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import no.unit.nva.elasticsearch.IndexContributor;
+import no.unit.nva.elasticsearch.IndexDocument;
+import nva.commons.utils.JsonUtils;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import static no.unit.nva.elasticsearch.Constants.CONTRIBUTORS_IDENTITY_NAME;
-import static no.unit.nva.elasticsearch.Constants.CREATED_DATE_KEY;
-import static no.unit.nva.elasticsearch.Constants.DATE_YEAR;
-import static no.unit.nva.elasticsearch.Constants.DESCRIPTION_MAIN_TITLE;
-import static no.unit.nva.elasticsearch.Constants.MODIFIED_DATE_KEY;
-import static no.unit.nva.elasticsearch.Constants.OWNER_NAME_KEY;
-import static no.unit.nva.elasticsearch.Constants.PUBLICATION_TYPE;
+import static java.util.Objects.nonNull;
 
 public class DynamoDBEventTransformer {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBEventTransformer.class);
+    private static final ObjectMapper mapper = JsonUtils.objectMapper;
 
-    public static final String UNKNOWN_VALUE_KEY_MESSAGE = "Unknown valueKey: {}";
-
-
-    private final Set<String> wantedIndexes = Set.of(DATE_YEAR,
-            CREATED_DATE_KEY,
-            MODIFIED_DATE_KEY,
-            DESCRIPTION_MAIN_TITLE,
-            OWNER_NAME_KEY,
-            CONTRIBUTORS_IDENTITY_NAME,
-            PUBLICATION_TYPE);
+    public static final String YEAR_JSON_POINTER = "/entityDescription/m/date/m/year/s";
+    public static final String MONTH_JSON_POINTER = "/entityDescription/m/date/m/month/s";
+    public static final String DAY_JSON_POINTER = "/entityDescription/m/date/m/day/s";
+    public static final String CONTRIBUTOR_LIST_JSON_POINTER = "/entityDescription/m/contributors/l";
+    public static final String CONTRIBUTOR_ARP_ID_JSON_POINTER = "/m/identity/m/arpId/s";
+    public static final String CONTRIBUTOR_NAME_JSON_POINTER = "/m/identity/m/name/s";
+    public static final String IDENTIFIER_JSON_POINTER = "/identifier/s";
+    public static final String MAIN_TITLE_JSON_POINTER = "/entityDescription/m/mainTitle/s";
+    public static final String TYPE_JSON_POINTER = "/entityDescription/m/reference/m/publicationInstance/m/type/s";
+    public static final String DATE_SEPARATOR = "-";
 
     /**
      * Creates a DynamoDBEventTransformer which creates a ElasticSearchIndexDocument from an dynamoDBEvent.
@@ -40,90 +37,101 @@ public class DynamoDBEventTransformer {
     }
 
     /**
-     * Transforms a nested valuemap read from DynamoDB streamrecord into ElasticSearchIndexDocument.
-     * @param identifier of the original dynamoDB record
-     * @param valueMap Map containing the values associated with the record
+     * Transforms a DynamoDB streamrecord into IndexDocument.
+     * @param streamRecord of the original dynamoDB record
      * @return A document usable for indexing in elasticsearch
      */
-    public ElasticSearchIndexDocument parseValueMap(String elasticSearchIndexName,
-                                                    String targetServiceUrl,
-                                                    String identifier,
-                                                    Map<String, AttributeValue> valueMap) {
-        ElasticSearchIndexDocument document =
-                new ElasticSearchIndexDocument(elasticSearchIndexName, targetServiceUrl, identifier);
-        parse(document, Constants.EMPTY_STRING, valueMap);
-        return document;
+    public IndexDocument parseStreamRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) {
+        JsonNode record = toJsonNode(streamRecord);
+
+        return new IndexDocument.Builder()
+                .withType(extractType(record))
+                .withIdentifier(extractIdentifier(record))
+                .withContributors(extractContributors(record))
+                .withDate(extractDate(record))
+                .withTitle(extractTitle(record))
+                .build();
     }
 
-    private void parse(ElasticSearchIndexDocument document, String prefix, Map<String, AttributeValue> valueMap) {
-        valueMap.forEach((k, v) -> {
-            if (v != null) {
-                String key = addIndexPrefix(prefix, k);
-                if (isASimpleValue(v)) {
-                    if (wantedIndexes.contains(key)) {
-                        assignValueToIndexDocument(document,key, v.getS());
-                    }
-                } else {
-                    if (v.getL() == null) {
-                        // This must be a map element
-                        parse(document, key, v.getM());
-                    } else {
-                        // This must be a list/JSON-array
-                        List<AttributeValue> listElements = v.getL();
-                        for (AttributeValue attributeValue : listElements) {
-                            if (isASimpleValue(attributeValue)) {
-                                if (wantedIndexes.contains(key)) {
-                                    assignValueToIndexDocument(document, key, v.getS());
-                                }
-                            } else {
-                                parse(document, key, attributeValue.getM());
-                            }
-                        }
-                    }
-                }
-            }
-        });
+    private String extractDate(JsonNode record) {
+        return formatDate(extractYear(record), extractMonth(record), extractDay(record));
     }
 
-    private void assignValueToIndexDocument(ElasticSearchIndexDocument document, String valueKey, String value) {
-        switch (valueKey) {
-            case PUBLICATION_TYPE:
-                document.setResourceType(value);
-                break;
-            case OWNER_NAME_KEY:
-                document.setOwner(value);
-                break;
-            case CONTRIBUTORS_IDENTITY_NAME:
-                document.addContributorName(value);
-                break;
-            case DESCRIPTION_MAIN_TITLE:
-                document.setTitle(value);
-                break;
-            case CREATED_DATE_KEY:
-                document.setCreatedDate(value);
-                break;
-            case MODIFIED_DATE_KEY:
-                document.setModifiedDate(value);
-                break;
-            case DATE_YEAR:
-                document.setDate(value);
-                break;
-            default:
-                logger.debug(UNKNOWN_VALUE_KEY_MESSAGE, valueKey);
-                break;
+    private String extractDay(JsonNode record) {
+        return textFromNode(record, DAY_JSON_POINTER);
+    }
+
+    private String extractMonth(JsonNode record) {
+        return textFromNode(record, MONTH_JSON_POINTER);
+    }
+
+    private String extractYear(JsonNode record) {
+        return textFromNode(record, YEAR_JSON_POINTER);
+    }
+
+    private List<IndexContributor> extractContributors(JsonNode record) {
+        return toStream(record.at(CONTRIBUTOR_LIST_JSON_POINTER))
+                .map(this::extractIndexContributor)
+                .collect(Collectors.toList());
+    }
+
+    private IndexContributor extractIndexContributor(JsonNode jsonNode) {
+        String identifier = textFromNode(jsonNode, CONTRIBUTOR_ARP_ID_JSON_POINTER);
+        String name = textFromNode(jsonNode, CONTRIBUTOR_NAME_JSON_POINTER);
+        return nonNull(name) ? generateIndexContributor(identifier, name) : null;
+    }
+
+    private String extractIdentifier(JsonNode record) {
+        return textFromNode(record, IDENTIFIER_JSON_POINTER);
+    }
+
+    private String extractTitle(JsonNode record) {
+        return textFromNode(record, MAIN_TITLE_JSON_POINTER);
+    }
+
+    private String extractType(JsonNode record) {
+        return textFromNode(record, TYPE_JSON_POINTER);
+    }
+
+    private String formatDate(String year, String month, String day) {
+        List<String> dateElements = new ArrayList<>();
+        if (nonNull(year)) {
+            dateElements.add(year);
         }
-    }
-
-    private boolean isASimpleValue(AttributeValue attributeValue) {
-        return attributeValue.getM() == null && attributeValue.getL() == null;
-    }
-
-    private String addIndexPrefix(String prefix, String k) {
-        if (prefix != null && !prefix.isEmpty()) {
-            return prefix + Constants.SIMPLE_DOT_SEPARATOR + k;
-        } else {
-            return k;
+        if (valueIsPresentAndHasPrecedingValues(month, dateElements)) {
+            dateElements.add(month);
         }
+        if (valueIsPresentAndHasPrecedingValues(day, dateElements)) {
+            dateElements.add(day);
+        }
+        return String.join(DATE_SEPARATOR, dateElements);
     }
 
+    private boolean valueIsPresentAndHasPrecedingValues(String month, List<String> dateElements) {
+        return nonNull(month) && !dateElements.isEmpty();
+    }
+
+    private IndexContributor generateIndexContributor(String identifier, String name) {
+        return new IndexContributor.Builder()
+                .withIdentifier(identifier)
+                .withName(name)
+                .build();
+    }
+
+    private String textFromNode(JsonNode jsonNode, String jsonPointer) {
+        JsonNode json = jsonNode.at(jsonPointer);
+        return isPopulated(json) ? json.asText() : null;
+    }
+
+    private boolean isPopulated(JsonNode json) {
+        return !json.isNull() && !json.asText().isBlank();
+    }
+
+    private JsonNode toJsonNode(DynamodbEvent.DynamodbStreamRecord streamRecord) {
+        return mapper.valueToTree(streamRecord.getDynamodb().getNewImage());
+    }
+
+    private Stream<JsonNode> toStream(JsonNode contributors) {
+        return StreamSupport.stream(contributors.spliterator(), false);
+    }
 }

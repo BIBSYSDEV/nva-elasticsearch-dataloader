@@ -2,8 +2,18 @@ package no.unit.nva.dynamodb;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.unit.nva.elasticsearch.Constants;
 import no.unit.nva.elasticsearch.ElasticSearchRestClient;
+import no.unit.nva.elasticsearch.IndexContributor;
+import no.unit.nva.elasticsearch.IndexDocument;
+import no.unit.nva.model.Contributor;
+import no.unit.nva.model.Identity;
+import no.unit.nva.model.exceptions.MalformedContributorException;
 import nva.commons.utils.Environment;
 import nva.commons.utils.IoUtils;
 import nva.commons.utils.JsonUtils;
@@ -14,16 +24,23 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Flow;
+import java.util.stream.Collectors;
 
 import static java.net.http.HttpResponse.BodySubscribers;
+import static java.util.Objects.nonNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,11 +63,42 @@ public class DynamoDBStreamHandlerTest {
     private static final String ELASTICSEARCH_ENDPOINT_INDEX = "resources";
     private static final String ELASTICSEARCH_ENDPOINT_API_SCHEME = "http";
     private static final Object TARGET_SERVICE_URL = "http://localhost/service/";
+    public static final String EVENT_JSON_STRING_NAME = "s";
+    public static final String CONTRIBUTOR_SEQUENCE_POINTER = "/m/sequence";
+    public static final String CONTRIBUTOR_NAME_POINTER = "/m/identity/m/name";
+    public static final String CONTRIBUTOR_ARPID_POINTER = "/m/identity/m/arpId";
+    public static final String CONTRIBUTOR_ID_POINTER = "/m/identity/m/id";
+    public static final String CONTRIBUTOR_POINTER = "/records/0/dynamodb/newImage/entityDescription/m/contributors";
+    public static final String EVENT_JSON_LIST_NAME = "l";
+    public static final String CONTRIBUTOR_TEMPLATE_JSON = "contributorTemplate.json";
+    public static final String EVENT_TEMPLATE_JSON = "eventTemplate.json";
+    public static final String ENTITY_DESCRIPTION_MAIN_TITLE_POINTER =
+            "/records/0/dynamodb/newImage/entityDescription/m/mainTitle";
+    public static final String PUBLICATION_INSTANCE_TYPE_POINTER =
+            "/records/0/dynamodb/newImage/entityDescription/m/reference/m/publicationInstance/m/type";
+    public static final String FIRST_RECORD_POINTER = "/records/0";
+    public static final String EVENT_NAME = "eventName";
+    public static final String MODIFY = "MODIFY";
+    public static final String IDENTIFIER_JSON_POINTER = "/records/0/dynamodb/newImage/identifier";
+    public static final String DATE_SEPARATOR = "-";
+    public static final int YEAR_INDEX = 0;
+    public static final int MONTH_INDEX = 1;
+    public static final int DAY_INDEX = 2;
+    public static final String ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER =
+            "/records/0/dynamodb/newImage/entityDescription/m/date/m";
+    public static final String EVENT_YEAR_NAME = "year";
+    public static final String EVENT_MONTH_NAME = "month";
+    public static final String EVENT_DAY_NAME = "day";
+    public static final String EXAMPLE_URI_BASE = "https://example.org/wanderlust/";
+
+    public static final ObjectMapper mapper = JsonUtils.objectMapper;
 
     private DynamoDBStreamHandler handler;
-    private ElasticSearchRestClient elasticSearchRestClient;
     private Context context;
     private HttpClient httpClient;
+
+    private JsonNode contributorTemplate;
+
 
     /**
      * Set up test environment.
@@ -66,8 +114,9 @@ public class DynamoDBStreamHandlerTest {
 
         HttpResponse<String> successResponse = mock(HttpResponse.class);
         doReturn(successResponse).when(httpClient).send(any(), any());
-        elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);
+        ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);
         handler = new DynamoDBStreamHandler(elasticSearchRestClient, environment);
+        contributorTemplate = mapper.readTree(IoUtils.inputStreamFromResources(Paths.get(CONTRIBUTOR_TEMPLATE_JSON)));
     }
 
     private Environment setupMockEnvironment() {
@@ -89,7 +138,7 @@ public class DynamoDBStreamHandlerTest {
     @Test
     @DisplayName("testCreateHandlerWithEmptyEnvironmentShouldFail")
     public void testCreateHandlerWithEmptyEnvironmentShouldFail() throws IOException, InterruptedException {
-        Exception exception = assertThrows(IllegalStateException.class, () -> new DynamoDBStreamHandler());
+        Exception exception = assertThrows(IllegalStateException.class, DynamoDBStreamHandler::new);
         assertTrue(exception.getMessage().contains("Environment variable not set"));
         verify(httpClient, atMost(0)).send(any(), any());
     }
@@ -143,50 +192,275 @@ public class DynamoDBStreamHandlerTest {
     }
 
     @Test
-    public void dynamoDBStreamHandlerDoCreateHttpRequestFromModifyEvent() throws IOException, InterruptedException {
+    @DisplayName("Test dynamoDBStreamHandler with complete record, single author")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithContributorsWhenInputIsModifyEvent() throws
+            IOException, InterruptedException {
+        String identifier = "1006a";
+        String contributorIdentifier = "123";
+        String contributorName = "Bólsön Kölàdỳ";
+        List<Contributor> contributors = Collections.singletonList(
+                generateContributor(contributorIdentifier, contributorName, 1));
+        String mainTitle = "Moi buki";
+        String type = "Book";
+        String date = "2020-09-08";
 
-        HttpResponse<String> successResponse = mock(HttpResponse.class);
-        final ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-        doReturn(successResponse).when(httpClient).send(httpRequestArgumentCaptor.capture(), any());
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, identifier, type, mainTitle, contributors, date);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
 
-        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
-        handler.handleRequest(requestEvent, context);
+        IndexDocument expected = generateIndexDocument(identifier, contributors, mainTitle, type, date);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
 
-        final HttpRequest httpRequest = httpRequestArgumentCaptor.getValue();
-
-        assertNotNull(httpRequest);
-        System.out.println(httpRequest);
+        assertThat(actual, samePropertyValuesAs(expected));
     }
-
 
     @Test
-    public void dynamoDBStreamHandlerDoCreateHttpRequestFromModifyEventSendTransformedData() throws Exception {
+    @DisplayName("Test dynamoDBStreamHandler with complete record, multiple authors")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithMultipleContributorsWhenInputIsModifyEvent()
+            throws IOException, InterruptedException {
+        String identifier = "1006a";
+        String firstContributorIdentifier = "123";
+        String firstContributorName = "Bólsön Kölàdỳ";
+        String secondContributorIdentifier = "345";
+        String secondContributorName = "Mèrdok Hüber";
+        List<Contributor> contributors = new ArrayList<>();
+        contributors.add(generateContributor(firstContributorIdentifier, firstContributorName, 1));
+        contributors.add(generateContributor(secondContributorIdentifier, secondContributorName, 2));
+        String mainTitle = "Moi buki";
+        String type = "Book";
+        String date = "2020-09-08";
 
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, identifier, type, mainTitle, contributors, date);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
+
+        IndexDocument expected = generateIndexDocument(identifier, contributors, mainTitle, type, date);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
+
+        assertThat(actual, samePropertyValuesAs(expected));
+    }
+
+    @Test
+    @DisplayName("Test dynamoDBStreamHandler with empty record, year only")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithYearOnlyWhenInputIsModifyEvent() throws
+            IOException, InterruptedException {
+        String date = "2020";
+
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, null, null, null, null, date);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
+
+        IndexDocument expected = generateIndexDocument(null, Collections.emptyList(), null, null, date);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
+
+        assertThat(actual, samePropertyValuesAs(expected));
+    }
+
+    @Test
+    @DisplayName("Test dynamoDBStreamHandler with empty record, year and month only")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentWithYearAndMonthOnlyWhenInputIsModifyEvent()
+            throws IOException, InterruptedException {
+        String date = "2020-09";
+
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, null, null, null, null, date);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
+
+        IndexDocument expected = generateIndexDocument(null, Collections.emptyList(), null, null, date);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
+
+        assertThat(actual, samePropertyValuesAs(expected));
+    }
+
+    @Test
+    @DisplayName("Test dynamoDBStreamHandler with empty record")
+    public void dynamoDBStreamHandlerCreatesHttpRequestWithIndexDocumentNullValuesWhenInputIsModifyEvent() throws
+            IOException, InterruptedException {
+        DynamodbEvent requestEvent = generateRequestEvent(MODIFY, null, null, null, null, null);
+        JsonNode requestBody = extractRequestBodyFromEvent(requestEvent);
+        IndexDocument expected = generateIndexDocument(null, Collections.emptyList(), null, null, null);
+        IndexDocument actual = mapper.convertValue(requestBody, IndexDocument.class);
+        assertThat(actual, samePropertyValuesAs(expected));
+    }
+
+    private ArgumentCaptor<HttpRequest> setupArgumentRequestCaptor() throws IOException, InterruptedException {
         HttpResponse<String> successResponse = mock(HttpResponse.class);
         final ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
         doReturn(successResponse).when(httpClient).send(httpRequestArgumentCaptor.capture(), any());
-
-        DynamodbEvent requestEvent = loadEventFromResourceFile(SAMPLE_MODIFY_EVENT_FILENAME);
-        handler.handleRequest(requestEvent, context);
-
-        final HttpRequest httpRequest = httpRequestArgumentCaptor.getValue();
-        String body = httpRequest.bodyPublisher().map(
-            p -> {
-                var bodySubscriber = BodySubscribers.ofString(StandardCharsets.UTF_8);
-                var flowSubscriber = new StringSubscriber(bodySubscriber);
-                p.subscribe(flowSubscriber);
-                return bodySubscriber.getBody().toCompletableFuture().join();
-            }).get();
-
-        System.out.println(body);
-        assertNotNull(httpRequest);
-        System.out.println(httpRequest);
+        return httpRequestArgumentCaptor;
     }
 
+    private IndexDocument generateIndexDocument(String identifier,
+                                                List<Contributor> contributors,
+                                                String mainTitle,
+                                                String type,
+                                                String date) {
+        List<IndexContributor> indexContributors = contributors.stream()
+                .map(this::generateIndexContributor)
+                .collect(Collectors.toList());
+
+        return new IndexDocument.Builder()
+                .withTitle(mainTitle)
+                .withType(type)
+                .withIdentifier(identifier)
+                .withContributors(indexContributors)
+                .withDate(date)
+                .build();
+    }
+
+    private IndexContributor generateIndexContributor(Contributor contributor) {
+        return new IndexContributor.Builder()
+                    .withIdentifier(contributor.getIdentity().getArpId())
+                    .withName(contributor.getIdentity().getName())
+                    .build();
+    }
+
+    private Contributor generateContributor(String identifier, String name, int sequence) {
+        Identity identity = new Identity.Builder()
+                .withArpId(identifier)
+                .withId(URI.create(EXAMPLE_URI_BASE + identifier))
+                .withName(name)
+                .build();
+        try {
+            return new Contributor.Builder()
+                    .withIdentity(identity)
+                    .withSequence(sequence)
+                    .build();
+        } catch (MalformedContributorException e) {
+            throw new RuntimeException("The Contributor in generateContributor is malformed");
+        }
+    }
+
+    private void updateDate(String date, JsonNode event) {
+        if (nonNull(date)) {
+            String[] splitDate = date.split(DATE_SEPARATOR);
+            if (isYearOnly(splitDate)) {
+                updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
+                        EVENT_YEAR_NAME, splitDate[YEAR_INDEX]);
+            }
+            if (isYearAndMonth(splitDate)) {
+                updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
+                        EVENT_MONTH_NAME, splitDate[MONTH_INDEX]);
+            }
+            if (isYearMonthDay(splitDate)) {
+                updateEventAtPointerWithNameAndValue(event, ENTITY_DESCRIPTION_PUBLICATION_DATE_JSON_POINTER,
+                        EVENT_DAY_NAME, splitDate[DAY_INDEX]);
+            }
+        }
+    }
+
+    private boolean isYearMonthDay(String[] splitDate) {
+        return splitDate.length == 3;
+    }
+
+    private boolean isYearAndMonth(String[] splitDate) {
+        return splitDate.length >= 2;
+    }
+
+    private boolean isYearOnly(String[] splitDate) {
+        return splitDate.length >= 1;
+    }
+
+    private void updateEventAtPointerWithNameAndValue(JsonNode event, String pointer, String name, Object value) {
+        if (value instanceof String) {
+            ((ObjectNode) event.at(pointer)).put(name, (String) value);
+        } else {
+            ((ObjectNode) event.at(pointer)).put(name, (Integer) value);
+        }
+    }
+
+    private void updateEventAtPointerWithNameAndArrayValue(ObjectNode event,
+                                                           String pointer,
+                                                           String name,
+                                                           ArrayNode value) {
+        ((ObjectNode) event.at(pointer)).set(name, value);
+    }
+
+    private JsonNode extractRequestBodyFromEvent(DynamodbEvent requestEvent) throws IOException, InterruptedException {
+        ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor = setupArgumentRequestCaptor();
+        handler.handleRequest(requestEvent, context);
+        return extractHttpRequestBody(httpRequestArgumentCaptor);
+    }
+
+    private DynamodbEvent toDynamodbEvent(JsonNode event) {
+        return mapper.convertValue(event, DynamodbEvent.class);
+    }
 
     private DynamodbEvent loadEventFromResourceFile(String filename) throws IOException {
         InputStream is = IoUtils.inputStreamFromResources(Paths.get(filename));
-        return JsonUtils.objectMapper.readValue(is, DynamodbEvent.class);
+        return mapper.readValue(is, DynamodbEvent.class);
+    }
+
+    private DynamodbEvent generateRequestEvent(String eventName,
+                                               String identifier,
+                                               String type,
+                                               String mainTitle,
+                                               List<Contributor> contributors,
+                                               String date) throws IOException {
+        ObjectNode event = getEventTemplate();
+        updateEventIdentifier(identifier, event);
+        updateEventName(eventName, event);
+        updateReferenceType(type, event);
+        updateEntityDescriptionMainTitle(mainTitle, event);
+        updateEntityDescriptionContributors(contributors, event);
+        updateDate(date, event);
+        return toDynamodbEvent(event);
+    }
+
+    private void updateEventIdentifier(String identifier, ObjectNode event) {
+        updateEventAtPointerWithNameAndValue(event, IDENTIFIER_JSON_POINTER, EVENT_JSON_STRING_NAME, identifier);
+    }
+
+    private ObjectNode getEventTemplate() throws IOException {
+        return mapper.valueToTree(loadEventFromResourceFile(EVENT_TEMPLATE_JSON));
+    }
+
+    private void updateEntityDescriptionContributors(List<Contributor> contributors, ObjectNode event) {
+        ArrayNode contributorsArrayNode = mapper.createArrayNode();
+        if (nonNull(contributors)) {
+            contributors.forEach(contributor -> updateContributor(contributorsArrayNode, contributor));
+            updateEventAtPointerWithNameAndArrayValue(event, CONTRIBUTOR_POINTER, EVENT_JSON_LIST_NAME,
+                    contributorsArrayNode);
+            ((ObjectNode) event.at(CONTRIBUTOR_POINTER)).set(EVENT_JSON_LIST_NAME, contributorsArrayNode);
+        }
+    }
+
+    private void updateContributor(ArrayNode contributors, Contributor contributor) {
+        ObjectNode activeTemplate = contributorTemplate.deepCopy();
+        updateEventAtPointerWithNameAndValue(activeTemplate, CONTRIBUTOR_SEQUENCE_POINTER,
+                EVENT_JSON_STRING_NAME, contributor.getSequence());
+        updateEventAtPointerWithNameAndValue(activeTemplate, CONTRIBUTOR_NAME_POINTER,
+                EVENT_JSON_STRING_NAME, contributor.getIdentity().getName());
+        updateEventAtPointerWithNameAndValue(activeTemplate, CONTRIBUTOR_ARPID_POINTER,
+                EVENT_JSON_STRING_NAME, contributor.getIdentity().getArpId());
+        updateEventAtPointerWithNameAndValue(activeTemplate, CONTRIBUTOR_ID_POINTER,
+                EVENT_JSON_STRING_NAME, contributor.getIdentity().getId().toString());
+        contributors.add(activeTemplate);
+    }
+
+    private void updateEntityDescriptionMainTitle(String mainTitle, ObjectNode event) {
+        ((ObjectNode) event.at(ENTITY_DESCRIPTION_MAIN_TITLE_POINTER))
+                .put(EVENT_JSON_STRING_NAME, mainTitle);
+    }
+
+    private void updateReferenceType(String type, ObjectNode event) {
+        updateEventAtPointerWithNameAndValue(event, PUBLICATION_INSTANCE_TYPE_POINTER,
+                EVENT_JSON_STRING_NAME, type);
+    }
+
+    private void updateEventName(String eventName, ObjectNode event) {
+        ((ObjectNode) event.at(FIRST_RECORD_POINTER)).put(EVENT_NAME, eventName);
+    }
+
+    private JsonNode extractHttpRequestBody(ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor) throws
+            JsonProcessingException {
+        final HttpRequest httpRequest = httpRequestArgumentCaptor.getValue();
+        String body = httpRequest.bodyPublisher().map(this::extractBodyString)
+                .orElseThrow(RuntimeException::new);
+        return mapper.readTree(body);
+    }
+
+    private String extractBodyString(HttpRequest.BodyPublisher p) {
+        var bodySubscriber = BodySubscribers.ofString(StandardCharsets.UTF_8);
+        var flowSubscriber = new StringSubscriber(bodySubscriber);
+        p.subscribe(flowSubscriber);
+        return bodySubscriber.getBody().toCompletableFuture().join();
     }
 
     static final class StringSubscriber implements Flow.Subscriber<ByteBuffer> {
@@ -216,5 +490,4 @@ public class DynamoDBStreamHandlerTest {
             wrapped.onComplete();
         }
     }
-
 }

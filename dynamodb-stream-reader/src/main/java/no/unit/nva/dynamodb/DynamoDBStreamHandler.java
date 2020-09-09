@@ -5,8 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
 import no.unit.nva.elasticsearch.Constants;
-import no.unit.nva.elasticsearch.ElasticSearchIndexDocument;
 import no.unit.nva.elasticsearch.ElasticSearchRestClient;
+import no.unit.nva.elasticsearch.IndexDocument;
 import nva.commons.utils.Environment;
 import nva.commons.utils.JacocoGenerated;
 import nva.commons.utils.attempt.Failure;
@@ -81,7 +81,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     }
 
     private void processRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) throws
-            InterruptedException, IOException, URISyntaxException {
+            InterruptedException, IOException {
         switch (streamRecord.getEventName()) {
             case "INSERT":
             case "MODIFY":
@@ -96,23 +96,18 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     }
 
     private void upsertSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
-            throws InterruptedException, IOException, URISyntaxException {
-        String identifier = getIdentifierFromStreamRecord(streamRecord);
+            throws InterruptedException, IOException {
         Map<String, AttributeValue> valueMap = streamRecord.getDynamodb().getNewImage();
         logger.trace("valueMap={}", valueMap.toString());
 
         DynamoDBEventTransformer eventTransformer = new DynamoDBEventTransformer();
 
-        ElasticSearchIndexDocument document = eventTransformer.parseValueMap(
-                elasticSearchEndpointIndex,
-                targetServiceUrl,
-                identifier,
-                valueMap);
+        IndexDocument document = eventTransformer.parseStreamRecord(streamRecord);
         elasticSearchClient.addDocumentToIndex(document);
     }
 
     private void removeFromSearchIndex(DynamodbEvent.DynamodbStreamRecord streamRecord)
-            throws InterruptedException, IOException, URISyntaxException {
+            throws InterruptedException, IOException {
         String identifier = getIdentifierFromStreamRecord(streamRecord);
         elasticSearchClient.removeDocumentFromIndex(identifier);
     }
@@ -120,5 +115,4 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     private String getIdentifierFromStreamRecord(DynamodbEvent.DynamodbStreamRecord streamRecord) {
         return streamRecord.getDynamodb().getKeys().get(Constants.IDENTIFIER).getS();
     }
-
 }
