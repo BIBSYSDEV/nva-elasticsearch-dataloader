@@ -28,8 +28,6 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
     public static final String SUCCESS_MESSAGE = "200 OK";
 
     private final ElasticSearchRestClient elasticSearchClient;
-    private final String targetServiceUrl;
-    private final String elasticSearchEndpointIndex;
 
     /**
      * Default constructor for DynamoDBStreamHandler.
@@ -44,7 +42,7 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
      */
     @JacocoGenerated
     public DynamoDBStreamHandler(Environment environment) {
-        this(new ElasticSearchRestClient(HttpClient.newHttpClient(), environment), environment);
+        this(new ElasticSearchRestClient(HttpClient.newHttpClient(), environment));
     }
 
 
@@ -55,10 +53,8 @@ public class DynamoDBStreamHandler implements RequestHandler<DynamodbEvent, Stri
      * @param elasticSearchRestClient elasticSearchRestClient to be injected for testing
      */
     @JacocoGenerated
-    public DynamoDBStreamHandler(ElasticSearchRestClient elasticSearchRestClient, Environment environment) {
+    public DynamoDBStreamHandler(ElasticSearchRestClient elasticSearchRestClient) {
         this.elasticSearchClient = elasticSearchRestClient;
-        targetServiceUrl = environment.readEnv(Constants.TARGET_SERVICE_URL_KEY);
-        elasticSearchEndpointIndex = environment.readEnv(Constants.ELASTICSEARCH_ENDPOINT_INDEX_KEY);
     }
 
     @Override

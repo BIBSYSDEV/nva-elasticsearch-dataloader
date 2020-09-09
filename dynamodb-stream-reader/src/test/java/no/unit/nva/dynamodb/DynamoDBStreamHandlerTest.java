@@ -115,7 +115,7 @@ public class DynamoDBStreamHandlerTest {
         HttpResponse<String> successResponse = mock(HttpResponse.class);
         doReturn(successResponse).when(httpClient).send(any(), any());
         ElasticSearchRestClient elasticSearchRestClient = new ElasticSearchRestClient(httpClient, environment);
-        handler = new DynamoDBStreamHandler(elasticSearchRestClient, environment);
+        handler = new DynamoDBStreamHandler(elasticSearchRestClient);
         contributorTemplate = mapper.readTree(IoUtils.inputStreamFromResources(Paths.get(CONTRIBUTOR_TEMPLATE_JSON)));
     }
 
