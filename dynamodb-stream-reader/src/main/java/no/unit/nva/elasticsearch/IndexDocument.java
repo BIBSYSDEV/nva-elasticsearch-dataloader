@@ -2,8 +2,8 @@ package no.unit.nva.elasticsearch;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import nva.commons.utils.JacocoGenerated;
 import nva.commons.utils.JsonUtils;
 
@@ -15,8 +15,7 @@ public class IndexDocument {
     private final String identifier;
     private final List<IndexContributor> contributors;
     private final String title;
-    private final String date;
-    private static final ObjectMapper mapper = JsonUtils.objectMapper;
+    private final IndexDate date;
 
     @JacocoGenerated
     @JsonCreator
@@ -24,7 +23,7 @@ public class IndexDocument {
                          @JsonProperty("identifier") String identifier,
                          @JsonProperty("contributors") List<IndexContributor> contributors,
                          @JsonProperty("title") String title,
-                         @JsonProperty("date") String date) {
+                         @JsonProperty("date") IndexDate date) {
         this.type = type;
         this.identifier = identifier;
         this.contributors = contributors;
@@ -40,12 +39,12 @@ public class IndexDocument {
         date = builder.date;
     }
 
-    public String getType() {
-        return type;
-    }
-
     public String getIdentifier() {
         return identifier;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public List<IndexContributor> getContributors() {
@@ -56,12 +55,35 @@ public class IndexDocument {
         return title;
     }
 
-    public String getDate() {
+    public IndexDate getDate() {
         return date;
     }
 
     public String toJsonString() throws JsonProcessingException {
-        return mapper.writeValueAsString(this);
+        return JsonUtils.objectMapper.writeValueAsString(this);
+    }
+
+    @JacocoGenerated
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof IndexDocument)) {
+            return false;
+        }
+        IndexDocument that = (IndexDocument) o;
+        return Objects.equals(type, that.type)
+                && Objects.equals(identifier, that.identifier)
+                && Objects.equals(contributors, that.contributors)
+                && Objects.equals(title, that.title)
+                && Objects.equals(date, that.date);
+    }
+
+    @JacocoGenerated
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, identifier, contributors, title, date);
     }
 
     public static final class Builder {
@@ -69,7 +91,7 @@ public class IndexDocument {
         private String identifier;
         private List<IndexContributor> contributors;
         private String title;
-        private String date;
+        private IndexDate date;
 
         public Builder() {
         }
@@ -94,7 +116,7 @@ public class IndexDocument {
             return this;
         }
 
-        public Builder withDate(String date) {
+        public Builder withDate(IndexDate date) {
             this.date = date;
             return this;
         }
@@ -102,28 +124,5 @@ public class IndexDocument {
         public IndexDocument build() {
             return new IndexDocument(this);
         }
-    }
-
-    @JacocoGenerated
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof IndexDocument)) {
-            return false;
-        }
-        IndexDocument that = (IndexDocument) o;
-        return Objects.equals(getType(), that.getType())
-                && Objects.equals(getIdentifier(), that.getIdentifier())
-                && Objects.equals(getContributors(), that.getContributors())
-                && Objects.equals(getTitle(), that.getTitle())
-                && Objects.equals(getDate(), that.getDate());
-    }
-
-    @JacocoGenerated
-    @Override
-    public int hashCode() {
-        return Objects.hash(getType(), getIdentifier(), getContributors(), getTitle(), getDate());
     }
 }

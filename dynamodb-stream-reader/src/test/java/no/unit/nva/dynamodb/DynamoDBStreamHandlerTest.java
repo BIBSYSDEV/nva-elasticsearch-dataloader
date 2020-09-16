@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import no.unit.nva.elasticsearch.Constants;
 import no.unit.nva.elasticsearch.ElasticSearchRestClient;
 import no.unit.nva.elasticsearch.IndexContributor;
+import no.unit.nva.elasticsearch.IndexDate;
 import no.unit.nva.elasticsearch.IndexDocument;
 import no.unit.nva.exceptions.BadRequestException;
 import no.unit.nva.model.Contributor;
@@ -329,7 +330,7 @@ public class DynamoDBStreamHandlerTest {
                                                    String type,
                                                    String mainTitle,
                                                    List<Contributor> contributors,
-                                                   String date) throws IOException {
+                                                   String dateString) throws IOException {
         ObjectNode event = getEventTemplate();
         updateEventIdentifier(eventId,event);
         updateEventImageIdentifier(identifier, event);
@@ -337,7 +338,7 @@ public class DynamoDBStreamHandlerTest {
         updateReferenceType(type, event);
         updateEntityDescriptionMainTitle(mainTitle, event);
         updateEntityDescriptionContributors(contributors, event);
-        updateDate(date, event);
+        updateDate(dateString, event);
         return toDynamodbEvent(event);
 
 
@@ -362,7 +363,7 @@ public class DynamoDBStreamHandlerTest {
                                                 List<Contributor> contributors,
                                                 String mainTitle,
                                                 String type,
-                                                String date) {
+                                                String dateString) {
         List<IndexContributor> indexContributors = contributors.stream()
             .map(this::generateIndexContributor)
             .collect(Collectors.toList());
@@ -372,8 +373,26 @@ public class DynamoDBStreamHandlerTest {
             .withType(type)
             .withIdentifier(identifier)
             .withContributors(indexContributors)
-            .withDate(date)
+            .withDate(toIndexDate(dateString))
             .build();
+    }
+
+    private IndexDate toIndexDate(String date) {
+        if (nonNull(date)) {
+            String[] splitDate = date.split(DATE_SEPARATOR);
+            IndexDate indexDate = new IndexDate();
+            if (isYearOnly(splitDate)) {
+                indexDate.setYear(splitDate[YEAR_INDEX]);
+            }
+            if (isYearAndMonth(splitDate)) {
+                indexDate.setMonth(splitDate[MONTH_INDEX]);
+            }
+            if (isYearMonthDay(splitDate)) {
+                indexDate.setDay(splitDate[DAY_INDEX]);
+            }
+            return indexDate;
+        }
+        return null;
     }
 
     private IndexContributor generateIndexContributor(Contributor contributor) {
