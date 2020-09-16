@@ -31,7 +31,7 @@ public class DynamoDBEventTransformer {
     public static final String DATE_SEPARATOR = "-";
 
     /**
-     * Creates a DynamoDBEventTransformer which creates a ElasticSearchIndexDocument from an dynamoDBEvent.
+     * Creates a DynamoDBEventTransformer which creates a IndexDocument from an dynamoDBEvent.
      */
     public DynamoDBEventTransformer() {
     }
